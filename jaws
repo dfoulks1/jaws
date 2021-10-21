@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+import argparse
+import yaml
+import json
+import pprint
+import requests
+import getpass
+
+class JawsRunner:
+    def __init__(self, conf):
+        self.conf = conf
+        self.pp = pprint.PrettyPrinter()
+        
+        stub = "https://issues.apache.org/jira/rest/api/2/"
+
+        self.s = requests.Session()
+        if conf["headers"] is not None:
+            self.s.headers.update(conf["headers"])
+
+        if "auth" in conf.keys():
+            if conf["auth"]["username"] is not None:
+                username = conf["auth"]["username"]
+            else:
+                username = input("Jira Username: ")
+
+            if conf["auth"]["password"] is not None:
+                password = conf["auth"]["password"]
+            else:
+                password = str(getpass.getpass("%s password:" % username))
+
+        self.s.auth = (username, password)
+
+    def run(self):
+        for task in self.conf["tasks"]:
+            print(task["name"])
+            if "data" in task.keys() and task["data"] is not None:
+                data = task["data"]
+            else:
+                data = None
+
+            print(data)
+            if "req" not in task.keys() or task["req"] is None:
+                print("No Action specified, bailing out!")
+                break
+            elif task["req"] == "get":
+                t = self.s.get("/".join([self.conf["stub"], task["uri"]]), data = data)
+            elif task["req"] == "post":
+                t = self.s.post("/".join([self.conf["stub"], task["uri"]]), data = data)
+            elif task["req"] == "delete":
+                t = self.s.delete("/".join([self.conf["stub"], task["uri"]]), data = data)
+            elif task["req"] == "put":
+                t = self.s.put("/".join([self.conf["stub"], task["uri"]]), data = data)
+
+            if "action" not in task.keys() or task["action"] is None or task["action"] == "":
+                continue
+
+            elif task["action"] == "print":
+                print(t.content)
+            elif task["action"] == "store":
+                with open(input("Storage file: "), "w+") as f:
+                    json.dump(json.loads(t.content), f)
+
+                
+
+        print("DONE!")
+
+    def dump(self):
+        self.pp.pprint()
+
+def main(args):
+    conf = yaml.safe_load(open(args.jobfile, "r"))
+    j = JawsRunner(conf)
+    j.run()
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="PyF(etch)")
+    parser.add_argument("-j", "--jobfile", default=None, help="YAML Jobfile")
+    
+    args = parser.parse_args()
+    main(args)
+
+
+#def updateProject(project):
+#    # Get the old details
+#    resp = s.get(stub + "project/" + project)
+#    data = json.loads(resp.text)
+#    name = data['name']
+#    jira_banner = "<p style=\"color:red\">This project has been retired. Please refer to https://attic.apache.org/projects/%s.html for further details.</p><br>" %(name.lower())
+#    new = {
+#        "description": "%s %s" %(jira_banner, data['description']),
+#        "name": "%s (Retired)" % (data['name']),
+#        "categoryId": 10220, # Corresponds to "Retired"
+#        "permissionScheme": 12310290, # Read-only permission scheme
+#        "url": "https://attic.apache.org/projects/%s.html" % name.lower(),
+#    }
+#    # Set new details
+#    req = requests.Request('PUT', stub + "project/" + project, json=new)
+#    r = s.prepare_request(req)
+#    up_resp = s.send(r)
+#    print(json.dumps(up_resp.text, indent=4, sort_keys=True))
+#
