@@ -35,7 +35,7 @@ a task _may_ have:
 * `output`
   * `type` [ print | store ]
   * `dest` // store output in this file
-  * `show` [ content | status_code ] // print the content or status_code of the current task
+  * `show` [ content | status_code | headers ] // print the content or status_code of the current task
 ## Documentation
 
 * https://docs.atlassian.com/software/jira/docs/api/REST/8.13.12/
