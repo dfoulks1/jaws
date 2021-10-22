@@ -36,7 +36,8 @@ class JawsRunner:
                 data = str(task["data"]).replace("'","\"")
             else:
                 data = None
-            print("  - Payload: %s" % data)
+
+            if "verbose" in self.conf.keys() and self.conf["verbose"]: print("  - Payload: %s" % data)
 
             #if data is not None: print(data)
             if "stub_override" in task.keys() and task["stub_override"]:
@@ -44,7 +45,7 @@ class JawsRunner:
             else:
                 url = self.conf["stub"]
 
-            print("  - URL: %s/%s" % (url,task["uri"]))
+            if "verbose" in self.conf.keys() and self.conf["verbose"]: print("  - URL: %s/%s" % (url,task["uri"]))
 
             if "req" not in task.keys() or task["req"] is None:
                 print("No Action specified, bailing out!")

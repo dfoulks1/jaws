@@ -13,3 +13,4 @@ tasks:
     output:
       type: "print"
       show: "status_code"
+verbose: True

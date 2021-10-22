@@ -17,6 +17,7 @@ A Job _may_ have:
 * `authentication`
   * `username`
   * `password`
+* `verbose` [ True | False ]
 
 If the `authentiation` key is present in the job you will potentially be prompted for a username and password.
 
@@ -36,6 +37,7 @@ a task _may_ have:
   * `type` [ print | store ]
   * `dest` // store output in this file
   * `show` [ content | status_code | headers ] // print the content or status_code of the current task
+
 ## Documentation
 
 * https://docs.atlassian.com/software/jira/docs/api/REST/8.13.12/

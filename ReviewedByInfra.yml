@@ -19,3 +19,4 @@ tasks:
     output: 
       type: "store"
       dest: "./reviewed-by-infra.txt"
+verbose: False
