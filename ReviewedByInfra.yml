@@ -16,4 +16,6 @@ tasks:
       jql: "project = INFRA AND labels = ReviewedByInfra"
       fields: [ "key" ]
     req: "post"
-    output: "store"
+    output: 
+      type: "store"
+      dest: "./temp.txt"

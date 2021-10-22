@@ -18,12 +18,12 @@ class JawsRunner:
             self.s.headers.update(conf["headers"])
 
         if "auth" in conf.keys():
-            if conf["auth"]["username"] is not None:
+            if "username" in conf["auth"].keys() and conf["auth"]["username"] is not None:
                 username = conf["auth"]["username"]
             else:
                 username = input("Jira Username: ")
 
-            if conf["auth"]["password"] is not None:
+            if "password" in conf["auth"].keys() and conf["auth"]["password"] is not None:
                 password = conf["auth"]["password"]
             else:
                 password = str(getpass.getpass("%s password:" % username))
@@ -39,7 +39,7 @@ class JawsRunner:
             else:
                 data = None
 
-            if data is not None: print(data)
+            #if data is not None: print(data)
 
             if "req" not in task.keys() or task["req"] is None:
                 print("No Action specified, bailing out!")
@@ -53,13 +53,18 @@ class JawsRunner:
             elif task["req"] == "put":
                 t = self.s.put("/".join([self.conf["stub"], task["uri"]]), data = data)
 
-            if "output" not in task.keys() or task["output"] is None or task["output"] == "":
+            if "output" not in task.keys() or "type" not in task["output"].keys() or task["output"]["type"] is None or task["output"]["type"] == "":
                 continue
 
-            elif task["output"] == "print":
+            elif task["output"]["type"] == "print":
                 print(t.content)
-            elif task["output"] == "store":
-                with open(input("Storage file: "), "w+") as f:
+            elif task["output"]["type"] == "store":
+                if "dest" in task["output"]:
+                    fh = task["output"]["dest"]
+                else:
+                    fh = input("Storage file: ")
+
+                with open(fh, "w+") as f:
                     json.dump(json.loads(t.content), f)
 
         print("DONE!")
