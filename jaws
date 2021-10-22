@@ -78,24 +78,3 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     main(args)
-
-
-#def updateProject(project):
-#    # Get the old details
-#    resp = s.get(stub + "project/" + project)
-#    data = json.loads(resp.text)
-#    name = data['name']
-#    jira_banner = "<p style=\"color:red\">This project has been retired. Please refer to https://attic.apache.org/projects/%s.html for further details.</p><br>" %(name.lower())
-#    new = {
-#        "description": "%s %s" %(jira_banner, data['description']),
-#        "name": "%s (Retired)" % (data['name']),
-#        "categoryId": 10220, # Corresponds to "Retired"
-#        "permissionScheme": 12310290, # Read-only permission scheme
-#        "url": "https://attic.apache.org/projects/%s.html" % name.lower(),
-#    }
-#    # Set new details
-#    req = requests.Request('PUT', stub + "project/" + project, json=new)
-#    r = s.prepare_request(req)
-#    up_resp = s.send(r)
-#    print(json.dumps(up_resp.text, indent=4, sort_keys=True))
-#
