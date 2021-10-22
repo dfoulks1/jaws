@@ -8,5 +8,9 @@ auth:
   password: 
 tasks:
   - name: "Authenticate"
-    uri: "issue/createmeta"
+    stub_override: "https://cwiki.apache.org/wiki/rest/api"
+    uri: "space"
     req: "get"
+    output:
+      type: "print"
+      show: "status_code"

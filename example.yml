@@ -10,3 +10,6 @@ tasks:
   - name: "Authenticate"
     uri: "issue/createmeta"
     req: "get"
+    output:
+      type: "print"
+      show: "status_code"

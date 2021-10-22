@@ -19,7 +19,7 @@ class JawsRunner:
             if "username" in conf["auth"].keys() and conf["auth"]["username"] is not None:
                 username = conf["auth"]["username"]
             else:
-                username = input("Jira Username: ")
+                username = input("Username: ")
 
             if "password" in conf["auth"].keys() and conf["auth"]["password"] is not None:
                 password = conf["auth"]["password"]
@@ -55,19 +55,26 @@ class JawsRunner:
             elif task["req"] == "put":
                 t = self.s.put("/".join([url, task["uri"]]), data = data)
 
+            show_types = ["content", "status_code"]
             if "output" not in task.keys() or "type" not in task["output"].keys() or task["output"]["type"] is None or task["output"]["type"] == "":
                 continue
 
             elif task["output"]["type"] == "print":
-                print(t.content)
+                if "show" in task["output"].keys() and task["output"]["show"] in show_types:
+                    print(getattr(t, task["output"]["show"]))
+                else:
+                    print(dir(t))
             elif task["output"]["type"] == "store":
                 if "dest" in task["output"]:
                     fh = task["output"]["dest"]
                 else:
                     fh = input("Storage file: ")
-
-                with open(fh, "w+") as f:
-                    json.dump(json.loads(t.content), f)
+                if "show" in task["output"].keys() and task["output"]["show"] in show_types:
+                    with open(fh, "w+") as f:
+                        json.dump(json.loads(task["output"]["show"]), f)
+                else:
+                    with open(fh, "w+") as f:
+                        json.dump(json.loads(t.content), f)
 
         print("DONE!")
 
