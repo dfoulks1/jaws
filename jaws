@@ -33,12 +33,14 @@ class JawsRunner:
     def run(self):
         for task in self.conf["tasks"]:
             print(task["name"])
+            
             if "data" in task.keys() and task["data"] is not None:
-                data = task["data"]
+                data = str(task["data"]).replace("'","\"")
             else:
                 data = None
 
-            print(data)
+            if data is not None: print(data)
+
             if "req" not in task.keys() or task["req"] is None:
                 print("No Action specified, bailing out!")
                 break
@@ -51,16 +53,14 @@ class JawsRunner:
             elif task["req"] == "put":
                 t = self.s.put("/".join([self.conf["stub"], task["uri"]]), data = data)
 
-            if "action" not in task.keys() or task["action"] is None or task["action"] == "":
+            if "output" not in task.keys() or task["output"] is None or task["output"] == "":
                 continue
 
-            elif task["action"] == "print":
+            elif task["output"] == "print":
                 print(t.content)
-            elif task["action"] == "store":
+            elif task["output"] == "store":
                 with open(input("Storage file: "), "w+") as f:
                     json.dump(json.loads(t.content), f)
-
-                
 
         print("DONE!")
 

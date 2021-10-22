@@ -4,7 +4,7 @@ headers:
   Content-Type: "application/json"
   Authorization: "basic"
 auth:
-  username: 'dfoulks'
+  username:
   password: 
 tasks:
   - name: "Authenticate"
@@ -13,6 +13,7 @@ tasks:
   - name: "Search for tickets with a label"
     uri: "search"
     data:
-      jql: "project = INFRA AND assignee = dfoulks"
-    req: "get"
-    action: "store"
+      jql: "project = INFRA AND labels = ReviewedByInfra"
+      fields: [ "key" ]
+    req: "post"
+    output: "store"
