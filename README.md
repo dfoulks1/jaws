@@ -30,6 +30,7 @@ a task must have:
 if any of there are not present, the script will bail.
 
 a task _may_ have:
+* `stub_override`  // a URL that will override the job stub ad hoc.
 * `data`
 * `output`
   * `type` [ print | store ]

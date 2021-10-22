@@ -11,8 +11,6 @@ class JawsRunner:
         self.conf = conf
         self.pp = pprint.PrettyPrinter()
         
-        stub = "https://issues.apache.org/jira/rest/api/2/"
-
         self.s = requests.Session()
         if conf["headers"] is not None:
             self.s.headers.update(conf["headers"])
@@ -40,18 +38,22 @@ class JawsRunner:
                 data = None
 
             #if data is not None: print(data)
-
+            if "stub_override" in task.keys() and task["stub_override"]:
+                url = task["stub_override"]
+            else:
+                url = self.conf["stub"]
+            
             if "req" not in task.keys() or task["req"] is None:
                 print("No Action specified, bailing out!")
                 break
             elif task["req"] == "get":
-                t = self.s.get("/".join([self.conf["stub"], task["uri"]]), data = data)
+                t = self.s.get("/".join([url, task["uri"]]), data = data)
             elif task["req"] == "post":
-                t = self.s.post("/".join([self.conf["stub"], task["uri"]]), data = data)
+                t = self.s.post("/".join([url, task["uri"]]), data = data)
             elif task["req"] == "delete":
-                t = self.s.delete("/".join([self.conf["stub"], task["uri"]]), data = data)
+                t = self.s.delete("/".join([url, task["uri"]]), data = data)
             elif task["req"] == "put":
-                t = self.s.put("/".join([self.conf["stub"], task["uri"]]), data = data)
+                t = self.s.put("/".join([url, task["uri"]]), data = data)
 
             if "output" not in task.keys() or "type" not in task["output"].keys() or task["output"]["type"] is None or task["output"]["type"] == "":
                 continue

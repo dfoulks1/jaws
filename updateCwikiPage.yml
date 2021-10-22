@@ -1,0 +1,12 @@
+---
+stub: "https://cwiki.apache.org/confluence/rest/api"
+headers:
+  Content-Type: "application/json"
+  Authorization: "basic"
+auth:
+  username:
+  password: 
+tasks:
+  - name: "Authenticate"
+    uri: "issue/createmeta"
+    req: "get"
