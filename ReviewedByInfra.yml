@@ -10,7 +10,7 @@ tasks:
   - name: "Authenticate"
     uri: "issue/createmeta"
     req: "get"
-  - name: "Search for tickets with a label \"ReviewedByInfra\""
+  - name: "Query Tickets"
     uri: "search"
     data:
       jql: "project = INFRA AND labels = ReviewedByInfra"
@@ -18,4 +18,4 @@ tasks:
     req: "post"
     output: 
       type: "store"
-      dest: "./temp.txt"
+      dest: "./reviewed-by-infra.txt"

@@ -30,19 +30,22 @@ class JawsRunner:
 
     def run(self):
         for task in self.conf["tasks"]:
-            print(task["name"])
+            print("### %s ###" % task["name"])
             
             if "data" in task.keys() and task["data"] is not None:
                 data = str(task["data"]).replace("'","\"")
             else:
                 data = None
+            print("  - Payload: %s" % data)
 
             #if data is not None: print(data)
             if "stub_override" in task.keys() and task["stub_override"]:
                 url = task["stub_override"]
             else:
                 url = self.conf["stub"]
-            
+
+            print("  - URL: %s/%s" % (url,task["uri"]))
+
             if "req" not in task.keys() or task["req"] is None:
                 print("No Action specified, bailing out!")
                 break
@@ -54,6 +57,11 @@ class JawsRunner:
                 t = self.s.delete("/".join([url, task["uri"]]), data = data)
             elif task["req"] == "put":
                 t = self.s.put("/".join([url, task["uri"]]), data = data)
+            
+            if str(t.status_code) not in ["404", "403", "402", "401"]:
+                print("  - Status: SUCCESS")
+            else:
+                print("  - Status: ERROR")
 
             show_types = ["content", "status_code", "headers"]
             if "output" not in task.keys() or "type" not in task["output"].keys() or task["output"]["type"] is None or task["output"]["type"] == "":
@@ -63,7 +71,7 @@ class JawsRunner:
                 if "show" in task["output"].keys() and task["output"]["show"] in show_types:
                     print(getattr(t, task["output"]["show"]))
                 else:
-                    print(dir(t))
+                    print(t.content)
             elif task["output"]["type"] == "store":
                 if "dest" in task["output"]:
                     fh = task["output"]["dest"]
@@ -75,8 +83,6 @@ class JawsRunner:
                 else:
                     with open(fh, "w+") as f:
                         json.dump(json.loads(t.content), f)
-
-        print("DONE!")
 
     def dump(self):
         self.pp.pprint()
