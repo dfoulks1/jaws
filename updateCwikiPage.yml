@@ -5,12 +5,13 @@ headers:
   Authorization: "basic"
 auth:
   username:
-  password: 
+  password:
 tasks:
-  - name: "Authenticate"
-    stub_override: "https://cwiki.apache.org/wiki/rest/api"
-    uri: "space"
+  - name: "search for content with label"
+    uri: "content/search"
     req: "get"
+    data:
+      cql: "space=Infrastructure"
     output:
       type: "print"
-      show: "status_code"
+      show: "headers"
