@@ -1,10 +1,15 @@
 ---
+vars:
+  username: "dfoulks"
+  query:
+    jql: "project = INFRA AND labels = ReviewedByInfra"
+    fields: [ "key" ]
 stub: "https://issues.apache.org/jira/rest/api/2"
 headers:
   Content-Type: "application/json"
   Authorization: "basic"
 auth:
-  username:
+  username: "{{ username }}"
   password: 
 tasks:
   - name: "Authenticate"

@@ -13,19 +13,23 @@ class JawsRunner:
         self.conf = conf
         self.pp = pprint.PrettyPrinter()
         self.s = requests.Session()
-        self.vars = {}
+        
+        if "vars" in conf.keys() and conf["vars"] is not None:
+            self.vars = conf["vars"]
+        else:
+            self.vars = {}
 
         if conf["headers"] is not None:
             self.s.headers.update(conf["headers"])
 
         if "auth" in conf.keys():
             if "username" in conf["auth"].keys() and conf["auth"]["username"] is not None:
-                username = conf["auth"]["username"]
+                username = self.interpret(conf["auth"]["username"])
             else:
                 username = input("Username: ")
 
             if "password" in conf["auth"].keys() and conf["auth"]["password"] is not None:
-                password = conf["auth"]["password"]
+                password = self.interpret(conf["auth"]["password"])
             else:
                 password = str(getpass.getpass("%s password:" % username))
 
@@ -36,7 +40,7 @@ class JawsRunner:
             print("### %s ###" % task["name"])
             
             if "data" in task.keys() and task["data"] is not None:
-                data = json.dumps(task["data"])
+                data = json.dumps(self.interpret(task["data"]))
             else:
                 data = None
 
@@ -99,6 +103,15 @@ class JawsRunner:
                 else:
                     with open(fh, "w+") as f:
                         json.dump(json.loads(t.content), f)
+
+    def interpret(self, string):
+        try:
+            template = jinja2.Environment(loader=jinja2.BaseLoader).from_string(string)
+            output = template.render(**self.vars)
+        except TypeError:
+            output = string
+
+        return output
 
     def dump_vars(self):
         template = jinja2.Environment(loader=jinja2.BaseLoader).from_string("{% for issue in issues.issues %}{{ issue.key }}\n{% endfor %}")
