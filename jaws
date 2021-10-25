@@ -5,13 +5,16 @@ import json
 import pprint
 import requests
 import getpass
+import sys
+import jinja2
 
 class JawsRunner:
     def __init__(self, conf):
         self.conf = conf
         self.pp = pprint.PrettyPrinter()
-        
         self.s = requests.Session()
+        self.vars = {}
+
         if conf["headers"] is not None:
             self.s.headers.update(conf["headers"])
 
@@ -33,7 +36,7 @@ class JawsRunner:
             print("### %s ###" % task["name"])
             
             if "data" in task.keys() and task["data"] is not None:
-                data = str(task["data"]).replace("'","\"")
+                data = json.dumps(task["data"])
             else:
                 data = None
 
@@ -71,11 +74,23 @@ class JawsRunner:
             elif task["output"]["type"] == "print":
                 if "show" in task["output"].keys() and task["output"]["show"] in show_types:
                     print(getattr(t, task["output"]["show"]))
+                elif task["output"]["show"] == "vars":
+                    self.pp.pprint(self.vars)
                 else:
                     print(t.content)
+            
+            elif task["output"]["type"] == "var":
+                if "name" in task["output"].keys() and task["output"]["name"] is not None:
+                    vname = task["output"]["name"]
+                    if "show" in task["output"].keys() and task["output"]["show"] in show_types:
+                        self.vars[vname] = json.loads(getattr(t, task["output"]["show"]))
+                else:
+                    print("Variables must have names!")
+                    sys.exit(-1)
+
             elif task["output"]["type"] == "store":
-                if "dest" in task["output"]:
-                    fh = task["output"]["dest"]
+                if "name" in task["output"]:
+                    fh = task["output"]["name"]
                 else:
                     fh = input("Storage file: ")
                 if "show" in task["output"].keys() and task["output"]["show"] in show_types:
@@ -85,13 +100,16 @@ class JawsRunner:
                     with open(fh, "w+") as f:
                         json.dump(json.loads(t.content), f)
 
-    def dump(self):
-        self.pp.pprint()
+    def dump_vars(self):
+        template = jinja2.Environment(loader=jinja2.BaseLoader).from_string("{% for issue in issues.issues %}{{ issue.key }}\n{% endfor %}")
+        output = template.render(**self.vars)
+        print(output)
 
 def main(args):
     conf = yaml.safe_load(open(args.jobfile, "r"))
     j = JawsRunner(conf)
     j.run()
+    j.dump_vars()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="PyF(etch)")

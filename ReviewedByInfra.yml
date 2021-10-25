@@ -17,6 +17,7 @@ tasks:
       fields: [ "key" ]
     req: "post"
     output: 
-      type: "store"
-      dest: "./reviewed-by-infra.txt"
+      type: "var"
+      name: "issues"
+      show: "content"
 verbose: False
