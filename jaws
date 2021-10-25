@@ -46,7 +46,6 @@ class JawsRunner:
 
             if "verbose" in self.conf.keys() and self.conf["verbose"]: print("  - Payload: %s" % data)
 
-            #if data is not None: print(data)
             if "stub_override" in task.keys() and task["stub_override"]:
                 url = task["stub_override"]
             else:
