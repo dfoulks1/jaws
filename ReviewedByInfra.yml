@@ -1,9 +1,6 @@
 ---
 vars:
   username: "dfoulks"
-  query:
-    jql: "project = INFRA AND labels = ReviewedByInfra"
-    fields: [ "key" ]
 stub: "https://issues.apache.org/jira/rest/api/2"
 headers:
   Content-Type: "application/json"
@@ -22,7 +19,7 @@ tasks:
       fields: [ "key" ]
     req: "post"
     output: 
-      type: "var"
-      name: "issues"
-      show: "content"
+      type: "print"
+      show: "template"
+      template_str: "{% for issue in issues %}{{ issue.key }}\n{% endfor %}"
 verbose: False

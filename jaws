@@ -79,6 +79,9 @@ class JawsRunner:
                     print(getattr(t, task["output"]["show"]))
                 elif task["output"]["show"] == "vars":
                     self.pp.pprint(self.vars)
+                elif task["output"]["show"] == "template":
+                    if "template_str" in task["output"].keys() and task["output"]["template_str"] is not None:
+                        print(self.interpret(task["output"]["template_str"], json.loads(t.content.decode('utf8'))))
                 else:
                     print(t.content)
             
@@ -103,10 +106,12 @@ class JawsRunner:
                     with open(fh, "w+") as f:
                         json.dump(json.loads(t.content), f)
 
-    def interpret(self, string):
+    def interpret(self, string, args=None):
+        if not args:
+            args = self.vars
         try:
             template = jinja2.Environment(loader=jinja2.BaseLoader).from_string(string)
-            output = template.render(**self.vars)
+            output = template.render(**args)
         except TypeError:
             output = string
 
@@ -121,7 +126,7 @@ def main(args):
     conf = yaml.safe_load(open(args.jobfile, "r"))
     j = JawsRunner(conf)
     j.run()
-    j.dump_vars()
+#    j.dump_vars()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="PyF(etch)")
