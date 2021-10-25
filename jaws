@@ -13,19 +13,23 @@ class JawsRunner:
         self.conf = conf
         self.pp = pprint.PrettyPrinter()
         self.s = requests.Session()
-        self.vars = {}
+        
+        if "vars" in conf.keys() and conf["vars"] is not None:
+            self.vars = conf["vars"]
+        else:
+            self.vars = {}
 
         if conf["headers"] is not None:
             self.s.headers.update(conf["headers"])
 
         if "auth" in conf.keys():
             if "username" in conf["auth"].keys() and conf["auth"]["username"] is not None:
-                username = conf["auth"]["username"]
+                username = self.interpret(conf["auth"]["username"])
             else:
                 username = input("Username: ")
 
             if "password" in conf["auth"].keys() and conf["auth"]["password"] is not None:
-                password = conf["auth"]["password"]
+                password = self.interpret(conf["auth"]["password"])
             else:
                 password = str(getpass.getpass("%s password:" % username))
 
@@ -36,13 +40,12 @@ class JawsRunner:
             print("### %s ###" % task["name"])
             
             if "data" in task.keys() and task["data"] is not None:
-                data = json.dumps(task["data"])
+                data = json.dumps(self.interpret(task["data"]))
             else:
                 data = None
 
             if "verbose" in self.conf.keys() and self.conf["verbose"]: print("  - Payload: %s" % data)
 
-            #if data is not None: print(data)
             if "stub_override" in task.keys() and task["stub_override"]:
                 url = task["stub_override"]
             else:
@@ -54,13 +57,13 @@ class JawsRunner:
                 print("No Action specified, bailing out!")
                 break
             elif task["req"] == "get":
-                t = self.s.get("/".join([url, task["uri"]]), data = data)
+                t = self.s.get("/".join([url, self.interpret(task["uri"])]), data = data)
             elif task["req"] == "post":
-                t = self.s.post("/".join([url, task["uri"]]), data = data)
+                t = self.s.post("/".join([url, self.interpret(task["uri"])]), data = data)
             elif task["req"] == "delete":
-                t = self.s.delete("/".join([url, task["uri"]]), data = data)
+                t = self.s.delete("/".join([url, self.interpret(task["uri"])]), data = data)
             elif task["req"] == "put":
-                t = self.s.put("/".join([url, task["uri"]]), data = data)
+                t = self.s.put("/".join([url, self.interpret(task["uri"])]), data = data)
             
             if str(t.status_code) not in ["404", "403", "402", "401"]:
                 print("  - Status: SUCCESS")
@@ -99,6 +102,15 @@ class JawsRunner:
                 else:
                     with open(fh, "w+") as f:
                         json.dump(json.loads(t.content), f)
+
+    def interpret(self, string):
+        try:
+            template = jinja2.Environment(loader=jinja2.BaseLoader).from_string(string)
+            output = template.render(**self.vars)
+        except TypeError:
+            output = string
+
+        return output
 
     def dump_vars(self):
         template = jinja2.Environment(loader=jinja2.BaseLoader).from_string("{% for issue in issues.issues %}{{ issue.key }}\n{% endfor %}")
