@@ -58,13 +58,13 @@ class JawsRunner:
                 print("No Action specified, bailing out!")
                 break
             elif task["req"] == "get":
-                t = self.s.get("/".join([url, task["uri"]]), data = data)
+                t = self.s.get("/".join([url, self.interpret(task["uri"])]), data = data)
             elif task["req"] == "post":
-                t = self.s.post("/".join([url, task["uri"]]), data = data)
+                t = self.s.post("/".join([url, self.interpret(task["uri"])]), data = data)
             elif task["req"] == "delete":
-                t = self.s.delete("/".join([url, task["uri"]]), data = data)
+                t = self.s.delete("/".join([url, self.interpret(task["uri"])]), data = data)
             elif task["req"] == "put":
-                t = self.s.put("/".join([url, task["uri"]]), data = data)
+                t = self.s.put("/".join([url, self.interpret(task["uri"])]), data = data)
             
             if str(t.status_code) not in ["404", "403", "402", "401"]:
                 print("  - Status: SUCCESS")
