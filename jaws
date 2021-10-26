@@ -32,6 +32,10 @@ class JawsRunner:
                 password = self.interpret(conf["auth"]["password"])
             else:
                 password = str(getpass.getpass("%s password:" % username))
+        
+        self.verbose = False
+        if "verbose" in self.conf.keys(): 
+            self.verbose = self.conf["verbose"]
 
         self.s.auth = (username, password)
 
@@ -44,14 +48,15 @@ class JawsRunner:
             else:
                 data = None
 
-            if "verbose" in self.conf.keys() and self.conf["verbose"]: print("  - Payload: %s" % data)
+
+            if self.verbose: print("  - Payload: %s" % data)
 
             if "stub_override" in task.keys() and task["stub_override"]:
                 url = task["stub_override"]
             else:
                 url = self.conf["stub"]
 
-            if "verbose" in self.conf.keys() and self.conf["verbose"]: print("  - URL: %s/%s" % (url,task["uri"]))
+            if self.verbose: print("  - URL: %s/%s" % (url,task["uri"]))
 
             if "req" not in task.keys() or task["req"] is None:
                 print("No Action specified, bailing out!")
@@ -117,16 +122,10 @@ class JawsRunner:
 
         return output
 
-    def dump_vars(self):
-        template = jinja2.Environment(loader=jinja2.BaseLoader).from_string("{% for issue in issues.issues %}{{ issue.key }}\n{% endfor %}")
-        output = template.render(**self.vars)
-        print(output)
-
 def main(args):
     conf = yaml.safe_load(open(args.jobfile, "r"))
     j = JawsRunner(conf)
     j.run()
-#    j.dump_vars()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="PyF(etch)")
