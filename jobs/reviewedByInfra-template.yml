@@ -1,0 +1,24 @@
+---
+vars:
+stub: "https://issues.apache.org/jira/rest/api/2"
+headers:
+  Content-Type: "application/json"
+  Authorization: "basic"
+auth:
+  username:
+  password: 
+tasks:
+  - name: "Authenticate"
+    uri: "issue/createmeta"
+    req: "get"
+  - name: "Query Tickets"
+    uri: "search"
+    data:
+      jql: "project = INFRA AND labels = ReviewedByInfra"
+      fields: [ "key" ]
+    req: "post"
+    output: 
+      type: "print"
+      show: "template"
+      template_file: "templates/example.j2"
+verbose: False
