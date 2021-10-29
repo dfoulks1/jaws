@@ -1,0 +1,18 @@
+---
+stub: "http://localhost:8080"
+headers:
+  Content-Type: "application/json"
+auth:
+  username:
+  password: 
+tasks:
+  - name: "Query PuppetDB Database"
+    uri: "pdb/query/v4/resources"
+    req: "get"
+    data:
+      nodes:
+        latest_report_status: "failed"
+    output:
+      type: "print"
+      show: "status_code"
+verbose: True
