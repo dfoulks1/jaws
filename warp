@@ -15,6 +15,7 @@ class WarpRunner:
         self.pp = pprint.PrettyPrinter()
         self.s = requests.Session()
         self.verbose = False
+        self.show_types = ["content", "status_code", "headers"]
         
         # Set Verbosity
         if "verbose" in self.conf.keys(): 
@@ -72,7 +73,20 @@ class WarpRunner:
     def run(self):
         for task in self.conf["tasks"]:
             print("### %s ###" % task["name"])
-            
+            if "loop" in task.keys() and task["loop"] is not None:
+                if "items" in task["loop"].keys() and task["loop"]["items"] is not None:
+                    taskitems = self.interpret(task["loop"])
+                if "iter_name" in task["loop"].keys() and task["loop"]["iter_name"] is not None:
+                    itemname = task["loop"]["iter_name"]
+                t = task.copy()
+                t.pop("loop")
+                print(t)
+                #t = self.interpret(t,
+            else: self.run_task(task)
+
+
+    def run_task(self, task):
+
             if "data" in task.keys() and task["data"] is not None:
                 data = self.interpret(json.dumps(task["data"]))
             else:
@@ -87,40 +101,36 @@ class WarpRunner:
 
             if self.verbose: print("  - URL: %s/%s" % (url,task["uri"]))
 
-            if "req" not in task.keys() or task["req"] is None:
+            if "action" not in task.keys() or task["action"] is None:
                 print("No Action specified, bailing out!")
-                break
-            elif task["req"] == "get":
-                t = self.s.get("/".join([url, self.interpret(task["uri"])]), data = data)
-            elif task["req"] == "post":
-                t = self.s.post("/".join([url, self.interpret(task["uri"])]), data = data)
-            elif task["req"] == "delete":
-                t = self.s.delete("/".join([url, self.interpret(task["uri"])]), data = data)
-            elif task["req"] == "put":
-                t = self.s.put("/".join([url, self.interpret(task["uri"])]), data = data)
             
+            elif task["action"] == "get":
+                t = self.s.get("/".join([url, self.interpret(task["uri"])]), data = data)
+            elif task["action"] == "post":
+                t = self.s.post("/".join([url, self.interpret(task["uri"])]), data = data)
+            elif task["action"] == "delete":
+                t = self.s.delete("/".join([url, self.interpret(task["uri"])]), data = data)
+            elif task["action"] == "put":
+                t = self.s.put("/".join([url, self.interpret(task["uri"])]), data = data)
+            elif "dump" in task["action"].keys():
+                if task["action"]["dump"] in self.vars.keys():
+                    self.pp.pprint(self.vars[task["action"]["dump"]])
+#                elif task["action"]["dump"] == "template":
+#                    if "template_str" in task["output"].keys() and task["output"]["template_str"] is not None:
+#                        print(self.interpret(task["output"]["template_str"], json.loads(t.content.decode('utf8'))))
+#                    elif "template_file" in task["output"].keys() and task["output"]["template_file"] is not None:
+#                        print(self.interpret(open(task["output"]["template_file"], "r").read(), json.loads(t.content.decode('utf8'))))
+                else:
+                    print("Name Not Found")
+                
             if str(t.status_code) not in ["404", "403", "402", "401"]:
                 print("  - Status: SUCCESS")
             else:
                 print("  - Status: ERROR")
 
-            show_types = ["content", "status_code", "headers"]
             if "output" not in task.keys() or "type" not in task["output"].keys() or task["output"]["type"] is None or task["output"]["type"] == "":
-                continue
+                pass
 
-            elif task["output"]["type"] == "print":
-                if "show" in task["output"].keys() and task["output"]["show"] in show_types:
-                    print(getattr(t, task["output"]["show"]))
-                elif task["output"]["show"] == "vars":
-                    self.pp.pprint(self.vars)
-                elif task["output"]["show"] == "template":
-                    if "template_str" in task["output"].keys() and task["output"]["template_str"] is not None:
-                        print(self.interpret(task["output"]["template_str"], json.loads(t.content.decode('utf8'))))
-                    elif "template_file" in task["output"].keys() and task["output"]["template_file"] is not None:
-                        print(self.interpret(open(task["output"]["template_file"], "r").read(), json.loads(t.content.decode('utf8'))))
-                else:
-                    print(t.content)
-            
             elif task["output"]["type"] == "var":
                 if "name" in task["output"].keys() and task["output"]["name"] is not None:
                     vname = task["output"]["name"]

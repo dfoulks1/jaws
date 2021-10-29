@@ -1,0 +1,32 @@
+---
+vars:
+stub: "https://issues.apache.org/jira/rest/api/2"
+headers:
+  Content-Type: "application/json"
+  Authorization: "basic"
+auth:
+  username:
+  password: 
+tasks:
+  - name: "Authenticate"
+    uri: "issue/createmeta"
+    action: "get"
+  - name: "Query Tickets"
+    uri: "search"
+    data:
+      jql: "project = INFRA AND labels = ReviewedByInfra"
+      fields: [ "key" ]
+    action: "post"
+    output: 
+      type: "var"
+      show: "content"
+      name: "issues"
+  - name: "Print Tickets"
+    action: 
+      dump:
+    loop:
+      items: "{{ issues.issues }}"
+      iter_name: "ticket"
+
+#      template_str: "{% for issue in issues %}{{ issue.key }}\n{% endfor %}"
+verbose: False
