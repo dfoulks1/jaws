@@ -13,15 +13,23 @@ class WarpRunner:
         self.conf = conf
         self.pp = pprint.PrettyPrinter()
         self.s = requests.Session()
+        self.verbose = False
         
+        # Set Verbosity
+        if "verbose" in self.conf.keys(): 
+            self.verbose = self.conf["verbose"]
+        
+        # Read in Job Vars
         if "vars" in conf.keys() and conf["vars"] is not None:
             self.vars = conf["vars"]
         else:
             self.vars = {}
 
+        # Read in Job Headers
         if conf["headers"] is not None:
             self.s.headers.update(conf["headers"])
 
+        # Authenticate if specified
         if "auth" in conf.keys():
             if "username" in conf["auth"].keys() and conf["auth"]["username"] is not None:
                 username = self.interpret(conf["auth"]["username"])
@@ -32,12 +40,29 @@ class WarpRunner:
                 password = self.interpret(conf["auth"]["password"])
             else:
                 password = str(getpass.getpass("%s password:" % username))
-        
-        self.verbose = False
-        if "verbose" in self.conf.keys(): 
-            self.verbose = self.conf["verbose"]
+    
+            self.s.auth = (username, password)
 
-        self.s.auth = (username, password)
+        # SSL Friendly certs settings
+        if "certs" in conf.keys() and conf["certs"] is not None:
+            if "ca_bundle" in conf["certs"].keys() and conf["certs"]["ca_bundle"]:
+                self.s.verify = conf["certs"]["ca_bundle"]
+            else:
+                if self.conf["verbose"]: print("No ca_bundle specified, skipping...")
+
+            certs = []
+            if "client" in conf["certs"].keys() and conf["certs"]["client"]:
+                certs.append([ conf["certs"]["client"])
+            else:
+                if self.conf["verbose"]: print("No client specified, skipping...")
+            
+            if "key" in conf["certs"].keys() and conf["certs"]["key"]:
+                certs.append([ conf["certs"]["key"])
+            else:
+                if self.conf["verbose"]: print("No key specified, skipping...")
+
+            if len(certs):
+                self.s.cert(tuple(certs))
 
     def run(self):
         for task in self.conf["tasks"]:
@@ -47,7 +72,6 @@ class WarpRunner:
                 data = json.dumps(self.interpret(task["data"]))
             else:
                 data = None
-
 
             if self.verbose: print("  - Payload: %s" % data)
 

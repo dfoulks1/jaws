@@ -2,9 +2,9 @@
 stub: "https://pupdb01-ec2-va.apache.org:8080"
 headers:
   Content-Type: "application/json"
-auth:
-  username:
-  password: 
+certs:
+  ca_bundle: "/etc/puppet/ssl/certs/ca.pem"
+  client: "/etc/puppet/ssl/certs/tools-vm-he-de.apache.org.pem"
 tasks:
   - name: "Query PuppetDB Database"
     uri: "pdb/query/v4/resources"
