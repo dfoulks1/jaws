@@ -1,5 +1,5 @@
 ---
-stub: "http://localhost:8080"
+stub: "https://pupdb01-ec2-va.apache.org:8080"
 headers:
   Content-Type: "application/json"
 auth:
