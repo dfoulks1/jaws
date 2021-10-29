@@ -23,10 +23,8 @@ tasks:
       name: "issues"
   - name: "Print Tickets"
     action: 
-      dump:
+      dump: "{{ issue.key }}\n"
     loop:
       items: "{{ issues.issues }}"
-      iter_name: "ticket"
-
-#      template_str: "{% for issue in issues %}{{ issue.key }}\n{% endfor %}"
+      iter_name: "issue"
 verbose: False
