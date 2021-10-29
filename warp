@@ -61,8 +61,11 @@ class WarpRunner:
             else:
                 if self.conf["verbose"]: print("No key specified, skipping...")
 
-            if len(certs):
-                self.s.cert(tuple(certs))
+            if len(certs) == 2:
+                c = tulpe(certs)
+                self.s.cert(c)
+            elif len(certs) == 1:
+                self.s.cert(certs[0])
 
     def run(self):
         for task in self.conf["tasks"]:
