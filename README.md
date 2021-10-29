@@ -1,7 +1,7 @@
-# jaws
-Jira Automated Web Scripter
+# warp
+Warwalrux' Automated Rest Parser
 
-./jaws -j example.yml
+./warp -j example.yml
 
 example.yml is an ansible-playbook inspired yaml job file. Jaws will read and run, in turn, each of the defined tasks.
 
