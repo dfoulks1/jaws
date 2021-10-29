@@ -73,11 +73,12 @@ class WarpRunner:
                 self.s.cert = certs[0]
 
     def run(self):
+        # Evaluate iteration before the task actually runs
         for task in self.conf["tasks"]:
             print("### %s ###" % task["name"])
             if "loop" in task.keys() and task["loop"] is not None:
                 if "items" in task["loop"].keys() and task["loop"]["items"] is not None:
-                    taskitems = json.dumps(self.interpret(task["loop"]["items"]).strip())
+                    taskitems = json.loads(self.interpret(task["loop"]["items"]).replace("'", "\""))
                 else:
                     print("No Items provided... Stopping.")
                     sys.exit(2)
@@ -86,13 +87,14 @@ class WarpRunner:
                 else:
                     print("No Iterator provided... Stopping.")
                     sys.exit(2)
+
                 for taskitem in taskitems:
                     t_vars = {}
                     t_vars[itemname] = taskitem
-                    print(t_vars)
                     t = task.copy()
                     t.pop("loop")
-                    self.run_task(json.dumps(self.interpret(t, t_vars)))
+                    self.vars = {**self.vars, **t_vars}
+                    self.run_task(self.interpret(t))
             else:
                 self.run_task(task)
 
