@@ -11,6 +11,11 @@ tasks:
     action:
       req: "get"
     output:
-      type: "print"
+      type: "var"
       show: "content"
+      name: "pages"
+  - name: "Show pages"
+    uri: "none"
+    action:
+      dump: "{{ pages }}"
 verbose: True

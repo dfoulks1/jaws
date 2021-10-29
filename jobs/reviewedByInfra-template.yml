@@ -10,15 +10,17 @@ auth:
 tasks:
   - name: "Authenticate"
     uri: "issue/createmeta"
-    req: "get"
+    action:
+      req: "get"
   - name: "Query Tickets"
     uri: "search"
     data:
       jql: "project = INFRA AND labels = ReviewedByInfra"
       fields: [ "key" ]
-    req: "post"
+    action:
+      req: "post"
     output: 
-      type: "print"
+      type: "store"
       show: "template"
-      template_file: "templates/example.j2"
+      template_str: "{% for issue in issues %} {{ issue.key }}\n {% endfor %}"
 verbose: False

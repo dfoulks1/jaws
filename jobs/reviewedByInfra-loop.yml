@@ -10,13 +10,15 @@ auth:
 tasks:
   - name: "Authenticate"
     uri: "issue/createmeta"
-    action: "get"
+    action: 
+      req: "get"
   - name: "Query Tickets"
     uri: "search"
     data:
       jql: "project = INFRA AND labels = ReviewedByInfra"
       fields: [ "key" ]
-    action: "post"
+    action: 
+      req: "post"
     output: 
       type: "var"
       show: "content"
