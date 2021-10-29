@@ -63,9 +63,10 @@ class WarpRunner:
 
             if len(certs) == 2:
                 c = tulpe(certs)
-                self.s.cert(c)
+                self.s.cert = c
             elif len(certs) == 1:
-                self.s.cert(certs[0])
+                print(certs)
+                self.s.cert = certs[0]
 
     def run(self):
         for task in self.conf["tasks"]:
