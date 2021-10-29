@@ -25,6 +25,16 @@ A Job _may_ have:
 
 If the `authentiation` key is present in the job but no `username` or `pasword` values are found, the script will interactively prompt for values.
 
+
+### Certificates
+
+If the `certs` key is present in the job, the script will attempt to add the following:
+* `ca_bundle`   // ca bundle certificate
+* `client`      // client certifcicate
+* `key`         // public key
+
+The script persist in using these settings for the entire job.
+
 ## Tasks
 
 a task **must** have:
@@ -63,6 +73,15 @@ Printing with a Jinja Template string
       type: "print"
       show: "template"
       template_str: "{% for item in items}{{ item.name }}{% endfor }"
+```
+
+Printing with a Jinja Template file
+```
+...
+    output:
+      type: "print"
+      show: "template"
+      template_file: "templates/example.j2"
 ```
 
 #### `store` example
