@@ -1,6 +1,5 @@
 ---
 vars:
-  username: "dfoulks"
 stub: "https://issues.apache.org/jira/rest/api/2"
 headers:
   Content-Type: "application/json"
