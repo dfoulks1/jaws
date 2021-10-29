@@ -52,12 +52,12 @@ class WarpRunner:
 
             certs = []
             if "client" in conf["certs"].keys() and conf["certs"]["client"]:
-                certs.append([ conf["certs"]["client"])
+                certs.append(conf["certs"]["client"])
             else:
                 if self.conf["verbose"]: print("No client specified, skipping...")
             
             if "key" in conf["certs"].keys() and conf["certs"]["key"]:
-                certs.append([ conf["certs"]["key"])
+                certs.append(conf["certs"]["key"])
             else:
                 if self.conf["verbose"]: print("No key specified, skipping...")
 
@@ -111,6 +111,8 @@ class WarpRunner:
                 elif task["output"]["show"] == "template":
                     if "template_str" in task["output"].keys() and task["output"]["template_str"] is not None:
                         print(self.interpret(task["output"]["template_str"], json.loads(t.content.decode('utf8'))))
+                    elif "template_file" in task["output"].keys() and task["output"]["template_file"] is not None:
+                        print(self.interpret(open(task["output"]["template_file"], "r").read(), json.loads(t.content.decode('utf8'))))
                 else:
                     print(t.content)
             
