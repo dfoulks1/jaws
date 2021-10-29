@@ -8,7 +8,7 @@ import getpass
 import sys
 import jinja2
 
-class JawsRunner:
+class WarpRunner:
     def __init__(self, conf):
         self.conf = conf
         self.pp = pprint.PrettyPrinter()
@@ -124,8 +124,8 @@ class JawsRunner:
 
 def main(args):
     conf = yaml.safe_load(open(args.jobfile, "r"))
-    j = JawsRunner(conf)
-    j.run()
+    job = WarpRunner(conf)
+    job.run()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="PyF(etch)")
