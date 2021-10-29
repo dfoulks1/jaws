@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import argparse
-import yaml
+import getpass
+import jinja2
 import json
 import pprint
 import requests
-import getpass
 import sys
-import jinja2
+import urllib
+import yaml
 
 class WarpRunner:
     def __init__(self, conf):
@@ -73,7 +74,7 @@ class WarpRunner:
             print("### %s ###" % task["name"])
             
             if "data" in task.keys() and task["data"] is not None:
-                data = json.dumps(self.interpret(task["data"]))
+                data = self.interpret(json.dumps(task["data"]))
             else:
                 data = None
 

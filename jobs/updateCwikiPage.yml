@@ -7,11 +7,9 @@ auth:
   password:
 tasks:
   - name: "search for content with label"
-    uri: "content/search"
+    uri: "content/search?cql=space%3DINFRA"
     req: "get"
-    data:
-      cql: "space=Infrastructure"
     output:
       type: "print"
-      show: "headers"
+      show: "content"
 verbose: True
