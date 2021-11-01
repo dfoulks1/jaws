@@ -8,11 +8,13 @@ certs:
 tasks:
   - name: "Query PuppetDB Database"
     uri: "pdb/query/v4/resources"
-    req: "get"
+    action:
+      req: "get"
     data:
       nodes:
         latest_report_status: "failed"
     output:
-      type: "print"
-      show: "status_code"
+      type: "var"
+      name: "puppet"
+      show: "content"
 verbose: True

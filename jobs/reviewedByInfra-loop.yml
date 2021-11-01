@@ -10,17 +10,23 @@ auth:
 tasks:
   - name: "Authenticate"
     uri: "issue/createmeta"
-    action:
+    action: 
       req: "get"
   - name: "Query Tickets"
     uri: "search"
     data:
       jql: "project = INFRA AND labels = ReviewedByInfra"
       fields: [ "key" ]
-    action:
+    action: 
       req: "post"
     output: 
-      type: "store"
-      show: "template"
-      template_str: "{% for issue in issues %} {{ issue.key }}\n {% endfor %}"
+      type: "var"
+      show: "content"
+      name: "issues"
+  - name: "Print Tickets"
+    action: 
+      dump: "{{ issue.key }}\n"
+    loop:
+      items: "{{ issues.issues }}"
+      iter_name: "issue"
 verbose: False

@@ -8,8 +8,14 @@ auth:
 tasks:
   - name: "search for content with label"
     uri: "content/search?cql=space%3DINFRA"
-    req: "get"
+    action:
+      req: "get"
     output:
-      type: "print"
+      type: "var"
       show: "content"
+      name: "pages"
+  - name: "Show pages"
+    uri: "none"
+    action:
+      dump: "{{ pages }}"
 verbose: True
