@@ -6,16 +6,16 @@ auth:
   username:
   password:
 tasks:
-  - name: "Get page content"
-    uri: "content/123899312?expand=body.storage"
+  - name: "search for content with label"
+    uri: "content/search?cql=space%3DINFRA"
     action:
       req: "get"
     output:
       type: "var"
       show: "content"
-      name: "page"
-  - name: "Show page"
+      name: "pages"
+  - name: "Show pages"
     uri: "none"
     action:
-      dump: "{{ page.body.storage.value }}"
+      dump: "{{ pages }}"
 verbose: True
