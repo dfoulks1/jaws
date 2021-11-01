@@ -14,6 +14,9 @@ A Job **must** have:
 * `tasks` which is a list of tasks to be run in the session.
 
 A Job _may_ have:
+* `loop`        // loop through the task.
+  * `items`     // list of items to iterate through, may be jinja.
+  * `iter_name` // name by which the current item in the iteration can be used. 
 * `authentication`
   * `username`
   * `password`
