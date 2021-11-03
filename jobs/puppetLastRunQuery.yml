@@ -14,7 +14,7 @@ tasks:
       nodes:
         latest_report_status: "failed"
     output:
-      type: "var"
+      write_to: "var"
       name: "puppet"
-      show: "content"
+      content: "content"
 verbose: True

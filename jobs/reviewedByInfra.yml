@@ -20,8 +20,8 @@ tasks:
     action:
       req: "post"
     output: 
-      type: "var"
-      show: "content"
+      write_to: "var"
+      content: "content"
       name: "issues"
   - name: "Print Tickets"
     action:

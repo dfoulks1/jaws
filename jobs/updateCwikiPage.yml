@@ -11,8 +11,8 @@ tasks:
     action:
       req: "get"
     output:
-      type: "var"
-      show: "content"
+      write_to: "var"
+      content: "content"
       name: "page"
   - name: "Show page"
     uri: "none"

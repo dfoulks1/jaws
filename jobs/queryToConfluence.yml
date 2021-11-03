@@ -20,8 +20,8 @@ tasks:
     action: 
       req: "post"
     output: 
-      type: "var"
-      show: "content"
+      write_to: "var"
+      content: "content"
       name: "issues"
   - name: "Get page content"
     uri: "content/123899312?expand=body.storage"
@@ -29,8 +29,8 @@ tasks:
     action:
       req: "get"
     output:
-      type: "var"
-      show: "content"
+      write_to: "var"
+      content: "content"
       name: "page"
   - name: "Update Page Content"
     uri: "none"

@@ -20,8 +20,8 @@ tasks:
     action: 
       req: "post"
     output: 
-      type: "var"
-      show: "content"
+      write_to: "var"
+      content: "content"
       name: "issues"
   - name: "Print Tickets"
     action: 
@@ -29,4 +29,9 @@ tasks:
     loop:
       items: "{{ issues.issues }}"
       iter_name: "issue"
+    output:
+      write_to: "var"
+      name: "output"
+      content: "raw"
+      
 verbose: False

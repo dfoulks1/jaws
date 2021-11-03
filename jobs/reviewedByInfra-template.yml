@@ -20,7 +20,7 @@ tasks:
     action:
       req: "post"
     output: 
-      type: "store"
-      show: "template"
+      write_to: "file"
+      content: "template"
       template_str: "{% for issue in issues %} {{ issue.key }}\n {% endfor %}"
 verbose: False
