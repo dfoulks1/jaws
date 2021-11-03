@@ -158,13 +158,6 @@ class WarpRunner:
             f.write(data) 
 
         elif task["output"]["write_to"] == "screen":
-            # Read in file name
-            if "name" in task["output"].keys() and task["output"]["name"] is not None:
-                fh = task["output"]["name"]
-            else:
-                fh = input("Storage file: ")
-            f = open(fh, "w+")
-            
             if "content" not in task["output"].keys() or task["output"]["content"] == "raw":
                 data = output
             elif task["output"]["content"] in self.show_types:

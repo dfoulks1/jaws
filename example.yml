@@ -9,8 +9,9 @@ auth:
 tasks:
   - name: "Authenticate"
     uri: "issue/createmeta"
-    req: "get"
+    action:
+      req: "get"
     output:
-      type: "print"
-      show: "status_code"
+      write_to: "screen"
+      content: "raw"
 verbose: True
