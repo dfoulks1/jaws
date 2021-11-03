@@ -1,12 +1,14 @@
 ---
-stub: "https://pupdb01-ec2-va.apache.org:8080"
+stub: "https://pupdb01-ec2-va.apache.org:8081"
 headers:
   Content-Type: "application/json"
 certs:
   ca_bundle: "/etc/puppetlabs/puppet/ssl/certs/ca.pem"
   client: "/etc/puppetlabs/puppet/ssl/certs/tools-vm-he-de.apache.org.pem"
+  key: "/etc/puppetlabs/puppet/ssl/private_keys/tools-vm-he-de.apache.org.pem"
 tasks:
   - name: "Query PuppetDB Database"
+    urlencode: True
     uri: "pdb/query/v4/resources"
     action:
       req: "get"
