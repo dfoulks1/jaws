@@ -7,15 +7,21 @@ auth:
   password:
 tasks:
   - name: "search for content with label"
-    uri: "content/search?cql=space%3DINFRA"
+    uri: "content/search"
+    data:
+      cql: "space = INFRA"
     action:
       req: "get"
     output:
       write_to: "var"
       content: "content"
       name: "pages"
-  - name: "Show pages"
-    uri: "none"
+    urlencode: True
+  - name: "Print pages"
+    uri: "None"
     action:
-      dump: "{{ pages }}"
+      dump: "{% for page in pages.results %}{{ page.title }}{% endfor %}"
+    output:
+      write_to: "screen"
+
 verbose: True

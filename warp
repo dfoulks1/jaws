@@ -14,14 +14,20 @@ class WarpRunner:
         self.conf = conf
         self.pp = pprint.PrettyPrinter()
         self.s = requests.Session()
-        self.verbose = False
+        
         self.actions = ["dump", "request"]
         self.show_types = ["content", "status_code", "headers"]
-
+        
+        self.verbose = False
         # Set Job verbosity
         if "verbose" in self.conf.keys(): 
             self.verbose = self.conf["verbose"]
-        
+
+        self.urlencode = False
+        # set urlencoding as false by default
+        if "urlencode" in self.conf.keys() and self.conf["urlencode"]:
+            self.urlencode = self.conf["urlencode"]
+
         # Read in Job vars
         if "vars" in conf.keys() and conf["vars"] is not None:
             self.vars = conf["vars"]
@@ -99,14 +105,22 @@ class WarpRunner:
             self.s.cert = certs[0]
         
     def __request(self, url, task, data):
+        target_url = "/".join([url, self.__interpret(task["uri"])])
+
+        if "urlencode" in task.keys() and task["urlencode"] or self.urlencode:
+            target_url = "?".join([target_url, urllib.parse.urlencode(json.loads(data))])
+            data = None
+
+        if self.verbose: print("  - URL: %s" % target_url)
+
         if task["action"]["req"] == "get":
-            t = self.s.get("/".join([url, self.__interpret(task["uri"])]), data = data)
+            t = self.s.get(target_url, data = data)
         elif task["action"]["req"] == "post":
-            t = self.s.post("/".join([url, self.__interpret(task["uri"])]), data = data)
+            t = self.s.post(target_url, data = data)
         elif task["action"]["req"] == "delete":
-            t = self.s.delete("/".join([url, self.__interpret(task["uri"])]), data = data)
+            t = self.s.delete(target_url, data = data)
         elif task["action"]["req"] == "put":
-            t = self.s.put("/".join([url, self.__interpret(task["uri"])]), data = data)
+            t = self.s.put(target_url, data = data)
         
         if str(t.status_code) not in ["404", "403", "402", "401"]:
             print("  - Status: SUCCESS")
@@ -211,7 +225,6 @@ class WarpRunner:
                 url = task["stub_override"]
             else:
                 url = self.conf["stub"]
-            if self.verbose: print("  - URL: %s/%s" % (url,task["uri"]))
 
             # Evaluate Action Statement
             if "action" not in task.keys() or not isinstance(task["action"], dict):
