@@ -128,7 +128,7 @@ class WarpRunner:
         elif task["action"]["req"] == "put":
             t = self.s.put(target_url, data = data)
         
-        if str(t.status_code) not in ["404", "403", "402", "401"]:
+        if str(t.status_code) in ["200"]:
             if self.verbose: print("  - Status: SUCCESS")
         else:
             if self.verbose: print("  - Status: ERROR")

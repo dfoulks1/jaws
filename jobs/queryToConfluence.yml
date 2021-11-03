@@ -1,6 +1,6 @@
 ---
 vars:
-  page_title: "Dashboard Concept"
+  page_title: "Infra Tests"
   confluence_url: "https://cwiki.apache.org/confluence/rest/api"
 stub: "https://issues.apache.org/jira/rest/api/2"
 headers:
@@ -48,7 +48,7 @@ tasks:
     urlencode: True
     uri: "content/{{ target_page.results[0].id }}"
     data:
-      expand: "body.storage"
+      expand: "body.storage,version"
     action:
       req: "get"
     output:
@@ -85,12 +85,15 @@ tasks:
 
   - name: "Update Confluence Page"
     stub_override: "https://cwiki.apache.org/confluence/rest/api"
-    uri: "content/123899312"
+    uri: "content/{{ page.id }}"
     data:
+      version: 
+        number: "{{ page.version.number + 1 }}"
+      title: "{{ page.title }}"
+      type: "{{ page.type }}"
       body:
-        view:
+        storage:
           value: "{{ page_body }}"
-          representation: "view"
     action:
       req: "put"
     output:
@@ -100,7 +103,7 @@ tasks:
 #  - name: "Show page"
 #    uri: "none"
 #    action:
-#      dump: "{{ page_body }}"
+#      dump: "{{ page }}"
 #    output:
 #      write_to: "screen"
 
