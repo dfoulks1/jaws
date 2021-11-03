@@ -1,7 +1,10 @@
 ---
 vars:
+  page_title: "Dashboard Concept"
+  confluence_url: "https://cwiki.apache.org/confluence/rest/api"
 stub: "https://issues.apache.org/jira/rest/api/2"
 headers:
+  Accept: "application/json"
   Content-Type: "application/json"
   Authorization: "basic"
 auth:
@@ -12,6 +15,7 @@ tasks:
     uri: "issue/createmeta"
     action: 
       req: "get"
+
   - name: "Query Tickets"
     uri: "search"
     data:
@@ -23,19 +27,49 @@ tasks:
       write_to: "var"
       content: "content"
       name: "issues"
-  - name: "Get page content"
-    uri: "content/123899312?expand=body.storage"
-    stub_override: "https://cwiki.apache.org/confluence/rest/api"
+
+  - name: "Find Page ID by Title"
+    stub_override: "{{ confluence_url }}"
+    uri: "content"
+    urlencode: True
+    data:
+      title: "{{ page_title }}"
+      spaceKey: "INFRA"
+      expand: "history"
+    action:
+      req: "get"
+    output:
+      write_to: "var"
+      content: "content"
+      name: "target_page"
+
+  - name: "Get Confluence Page Data"
+    stub_override: "{{ confluence_url }}"
+    urlencode: True
+    uri: "content/{{ target_page.results[0].id }}"
+    data:
+      expand: "body.storage"
     action:
       req: "get"
     output:
       write_to: "var"
       content: "content"
       name: "page"
+
+  - name: "Copy Page Body into something we can work with"
+    uri: "none"
+    action:
+      dump: "{{ page.body.storage.value }}"
+    output:
+      write_to: "var"
+      name: "page_body"
+
   - name: "Update Page Content"
     uri: "none"
     action: 
-      dump: "<p><ac:structured-macro ac:name=\"jira\" ac:schema-version=\"1\" ac:macro-id=\"91a4e6cf-e974-40ef-9943-30fc350845e6\">
+      dump: "{{ page_body }}
+<p>
+<ac:structured-macro ac:name=\"jira\" ac:schema-version=\"1\" ac:macro-id=\"91a4e6cf-e974-40ef-9943-30fc350845e6\">
 <ac:parameter ac:name=\"server\">ASF JIRA</ac:parameter>
 <ac:parameter ac:name=\"columnIds\">issuekey,summary,issuetype,created,updated,duedate,assignee,reporter,priority,status,resolution</ac:parameter>
 <ac:parameter ac:name=\"columns\">key,summary,type,created,updated,due,assignee,reporter,priority,status,resolution</ac:parameter>
@@ -45,8 +79,29 @@ tasks:
     loop:
       items: "{{ issues.issues }}"
       iter_name: "issue"
-  - name: "Show page"
-    uri: "none"
+    output:
+      write_to: "var"
+      name: "page_body"
+
+  - name: "Update Confluence Page"
+    stub_override: "https://cwiki.apache.org/confluence/rest/api"
+    uri: "content/123899312"
+    data:
+      body:
+        view:
+          value: "{{ page_body }}"
+          representation: "view"
     action:
-      dump: "{{ page.body.storage.value }}"
+      req: "put"
+    output:
+      write_to: "screen"
+      content: "content"
+
+#  - name: "Show page"
+#    uri: "none"
+#    action:
+#      dump: "{{ page_body }}"
+#    output:
+#      write_to: "screen"
+
 verbose: True

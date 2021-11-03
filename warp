@@ -29,10 +29,16 @@ class WarpRunner:
             self.urlencode = self.conf["urlencode"]
 
         # Read in Job vars
-        if "vars" in conf.keys() and conf["vars"] is not None:
+        if "vars" in self.conf.keys() and self.conf["vars"] is not None:
             self.vars = conf["vars"]
         else:
             self.vars = {}
+       
+        # N.B. this and everything below it relies on __interpret so put it below the vars...
+        
+        # Set the Job URL 
+        if "stub" in self.conf.keys() and self.conf["stub"] is not None:
+            self.url = self.__interpret(self.conf["stub"])
 
         # Read in Job Headers
         if "headers" in conf.keys() and conf["headers"] is not None:
@@ -123,9 +129,9 @@ class WarpRunner:
             t = self.s.put(target_url, data = data)
         
         if str(t.status_code) not in ["404", "403", "402", "401"]:
-            print("  - Status: SUCCESS")
+            if self.verbose: print("  - Status: SUCCESS")
         else:
-            print("  - Status: ERROR")
+            if self.verbose: print("  - Status: ERROR")
 
         return(t)
 
@@ -222,9 +228,9 @@ class WarpRunner:
 
             # Read in stub_override
             if "stub_override" in task.keys() and task["stub_override"]:
-                url = task["stub_override"]
+                url = self.__interpret(task["stub_override"])
             else:
-                url = self.conf["stub"]
+                url = self.url
 
             # Evaluate Action Statement
             if "action" not in task.keys() or not isinstance(task["action"], dict):

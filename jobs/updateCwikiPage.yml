@@ -18,4 +18,6 @@ tasks:
     uri: "none"
     action:
       dump: "{{ page.body.storage.value }}"
+    output:
+      write_to: "screen"
 verbose: True
