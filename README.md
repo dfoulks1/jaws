@@ -1,10 +1,14 @@
-# warp
-Warwalrux' Automated Rest Parser
+# Warwalrux' Automated Rest Parser
+Affectionately known as `warp`
 
+```
+Basic Example:
 ./warp -j example.yml
+```
 
-example.yml is an ansible-playbook inspired yaml job file. Jaws will read and run, in turn, each of the defined tasks.
+warp is a jobfile parser and jinja interpreter for a requests.session backend. This allows users to define complex processes wherein data is manipulated and passed between disparate web services linking them across a single session using ansible-playbook inspired yaml files.
 
+`example.yml` is one such job file. When run, warp will read the jobfile, establish session details, interpret the tasks and then run, in sequence, each of the defined tasks.
 
 * [Job Sessions](#job-sessions)
   * [Authentication](#authentication)
