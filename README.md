@@ -36,16 +36,32 @@ A Job **must** have:
 
 A Job _may_ have:
 * `urlencode`   // set data to be urlencoded as the default payload format
-* `authentication`
+* `auth`
   * `username`
   * `password`
 * `verbose` [ True | False ]
 * `vars`
 * `headers`
 
+**Basic Job Example**
+```
+---
+stub: "https://issues.apache.org/jira/rest/api/2"
+headers:
+  Content-Type: "application/json"
+  Authorization: "basic"
+auth:
+  username:
+  password: 
+tasks:
+  ...
+verbose: True
+```
+
+
 ### Authentication
 
-If the `authentiation` key is present in the job but no `username` or `pasword` values are found, the script will interactively prompt for values.
+If the `authentication` key is present in the job but no `username` or `pasword` values are found, the script will interactively prompt for values.
 
 The script persists in using these as the default credentials for the entire job.
 
@@ -80,6 +96,19 @@ a task _may_ have:
 * `stub_override` // a URL that will override the job stub ad hoc.
 * `data` // YAML formatted request payload
 * `output` // an output statement
+
+**Example Task**
+```
+...
+tasks:
+  - name: "Authenticate"
+    uri: "issue/createmeta"
+    action:
+      req: "get"
+    output:
+      write_to: "screen"
+...
+```
 
 ### Loops
 If the loop key is found in the task object the script will construct items via jinja interpretation. The output will be iterated through and can be referenced by iter_name

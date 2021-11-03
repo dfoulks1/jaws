@@ -9,7 +9,7 @@ tasks:
   - name: "search for content with label"
     uri: "content/search"
     data:
-      cql: "space = INFRA"
+      cql: "label = 'infra-doctype-admin'"
     action:
       req: "get"
     output:
@@ -20,7 +20,7 @@ tasks:
   - name: "Print pages"
     uri: "None"
     action:
-      dump: "{% for page in pages.results %}{{ page.title }}{% endfor %}"
+      dump: "{% for page in pages.results %}{{ page.title }}\n{% endfor %}"
     output:
       write_to: "screen"
 
