@@ -136,6 +136,8 @@ There are three options for redirecting output with `write_to` at this time:
 * `headers`     // response.headers
 * `status_code` // response.status_code
 
+If no `content` directive is provided the default is `response.content`
+
 #### `screen` example
 
 Printing stored variable a Jinja Template string
