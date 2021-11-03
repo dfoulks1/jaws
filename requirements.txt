@@ -1,0 +1,9 @@
+argparse
+getpass
+jinja2
+json
+pprint
+requests
+sys
+urllib
+yaml
