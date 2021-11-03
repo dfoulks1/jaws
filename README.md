@@ -187,8 +187,3 @@ Values stored as variables can be used in later steps with jinja templating
 ### Task Options
 Currently there are two job options available:
 * `urlencode`   // url encode the payload instead of the default json.
-
-## Documentation
-
-* https://docs.atlassian.com/software/jira/docs/api/REST/8.13.12/
-* https://developer.atlassian.com/server/confluence/confluence-rest-api-examples/
