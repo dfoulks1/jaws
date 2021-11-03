@@ -39,7 +39,7 @@ A Job _may_ have:
 * `auth`
   * `username`
   * `password`
-* `verbose` [ True | False ]
+* `verbose` // verbosity boolean
 * `vars`
 * `headers`
 
