@@ -156,7 +156,7 @@ When run the output may be stored or manipulated with an output statement and us
 
 #### `read_vars` tasks
 
-`read_vars` is an object that when specified as an action, will read the contents of a file into a variable for use.
+`read_vars` is an object that when specified as an action, will read the contents of a yaml dict file into a variable for use.
 
 *** Task Example ***
 ```
