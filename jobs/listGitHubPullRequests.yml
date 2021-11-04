@@ -7,7 +7,7 @@ vars:
   pulls: {}
 stub: "https://api.github.com"
 headers:
-  Authorization: "token a20c46ac35dce0a20495460172ddb68b787d814a"
+  Authorization: "token"
 tasks:
   - name: "Fetch PRs"
     uri: "repos/{{ org }}/{{ repo }}/pulls"
