@@ -57,7 +57,10 @@ tasks:
   ...
 verbose: True
 ```
+### Vars
+If the `vars` key is present in the job the entire dict is read into the job vars object for use.
 
+Additionally the `read_vars` action works in this object. Providing a vars file via `read_vars` action here will initialize before starting the Pre-Flight checks
 
 ### Authentication
 
@@ -127,6 +130,7 @@ This will allow you to use {% raw %}`{{ ticket }}`{% endraw $} as a valid variab
 Task actions are at the core of `warp` functionality. All tasks must have valid action statements. Currently only two types of task are supported:
 * `dump`
 * `req`
+* `read_vars`
 
 #### `dump` Tasks
 
@@ -147,6 +151,32 @@ action:
 * `post`
 
 When run the output may be stored or manipulated with an output statement and used in another task or to generate a report.
+
+#### `read_vars` tasks
+
+`read_vars` is an object that when specified as an action, will read the contents of a file into a variable for use.
+
+*** Task Example ***
+```
+...
+action:
+  read_vars:
+    var_file: "path/to/yaml/vars/file"
+    to_name: "filevars"
+...
+```
+
+ The `read_vars` action is unique in that it can also be called from 
+
+*** Pre-Flight Example ***
+```
+...
+vars:
+  read_vars:
+    var_file: "path/to/yaml/vars/file"
+    to_name: "filevars"
+...
+```
 
 ### Output
 
