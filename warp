@@ -179,9 +179,9 @@ class WarpRunner:
 
         elif task["output"]["write_to"] == "screen":
             if "content" not in task["output"].keys() or task["output"]["content"] == "raw":
-                data = output
+                data = json.loads(output)
             elif task["output"]["content"] in self.show_types:
-                data = json.dumps(json.loads(getattr(output, task["output"]["content"])))
+                data = json.loads(getattr(output, task["output"]["content"]))
             elif task["output"]["content"] == "template":
                 if "template_str" in task["output"].keys() and task["output"]["template_str"]:
                     data = self.__interpret(task["output"]["template_str"], json.loads(output.content.decode('utf8')))

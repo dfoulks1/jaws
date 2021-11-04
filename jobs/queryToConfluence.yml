@@ -2,6 +2,7 @@
 vars:
   page_title: "Infra Tests"
   confluence_url: "https://cwiki.apache.org/confluence/rest/api"
+  jira_query: "project = INFRA AND labels = ReviewedByInfra"
 stub: "https://issues.apache.org/jira/rest/api/2"
 headers:
   Accept: "application/json"
@@ -19,7 +20,7 @@ tasks:
   - name: "Query Tickets"
     uri: "search"
     data:
-      jql: "project = INFRA AND labels = ReviewedByInfra"
+      jql: "{{ jira_query }}"
       fields: [ "key" ]
     action: 
       req: "post"
