@@ -17,11 +17,15 @@ tasks:
       content: "content"
       name: "pages"
     urlencode: True
+
   - name: "Print pages"
     uri: "None"
     action:
-      dump: "{% for page in pages.results %}{{ page.title }}\n{% endfor %}"
+      dump: "{{ page.title }}"
     output:
       write_to: "screen"
+    loop:
+      items: "{{ pages.results }}"
+      iter_name: "page"
 
-verbose: True
+verbose: false

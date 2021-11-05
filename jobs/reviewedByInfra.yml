@@ -29,4 +29,4 @@ tasks:
     output:
       write_to: "screen"
 
-verbose: False
+verbose: True

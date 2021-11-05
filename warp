@@ -4,6 +4,7 @@ import argparse
 import getpass
 import jinja2
 import json
+import logging
 import os
 import pprint
 import requests
@@ -11,8 +12,16 @@ import sys
 import urllib
 import yaml
 
+logger = logging.getLogger(__name__)
+FORMAT = "[%(filename)s:%(lineno)s - %(funcName)15s() ] %(message)s"
+logging.basicConfig(format=FORMAT)
+logger.setLevel(logging.CRITICAL)
+
+
 class WarpRunner:
     def __init__(self, conf):
+        logger.debug("Initializing new WARP object.")
+        
         self.conf = conf
         self.pp = pprint.PrettyPrinter()
         self.s = requests.Session()
@@ -26,19 +35,21 @@ class WarpRunner:
             print("### Pre-Flight checks ###")
             self.verbose = self.conf["verbose"]
 
-        self.urlencode = False
-        # set urlencoding as false by default
-        if "urlencode" in self.conf.keys() and self.conf["urlencode"]:
-            self.urlencode = self.conf["urlencode"]
-
+       
         # Read in Job vars
         if "vars" in self.conf.keys() and self.conf["vars"] is not None:
+            logger.debug("Found Job vars.")
             self.vars = conf["vars"]
             if "read_vars" in self.vars.keys():
                 self.__readFileIntoVar(self.vars["read_vars"])
         else:
             self.vars = {}
-       
+            
+        self.urlencode = False
+        # set urlencoding as false by default
+        if "urlencode" in self.conf.keys() and self.conf["urlencode"]:
+            self.urlencode = self.__interpret(self.conf["urlencode"])
+            logger.debug("Job level URL Encoding set to %s" % self.urlencode)
         # N.B. this and everything below it relies on __interpret so put it below the vars...
         
         # Set the Job URL 
@@ -67,31 +78,61 @@ class WarpRunner:
             self.__set_certs(self.certs)
 
     def __interpret(self, string, args=None):
+        logger.debug("Interpreting %s" % type(string))
         if not args:
+            logger.debug("No vars passed, using job vars")
             args = self.vars
         try:
+            logger.debug("Rendering output from string")
             template = jinja2.Environment(loader=jinja2.BaseLoader).from_string(string)
             output = template.render(**args)
+            logger.debug("Returning rendered string")
         except TypeError:
+            logger.info("Not a valid template... returning original input")
             output = string
 
         return output
 
-    def __auth(self, username=None, password=None):
-        if not username: username = input("Username (default: %s): " % self.username)
-        if not username: username = self.username
-        if not password: password = getpass.getpass("%s password: " % username)
-        if not password: password = self.password
+    def __objectify(self, string):
+        logger.debug("Received %s" % type(string))
+        try:
+            logger.debug("Trying JSON...")
+            data = json.loads(string)
+        except:
+            logger.debug("JSON Parsing failed!")
+            try:
+                logger.debug("Trying YAML...")
+                data = yaml.safe_load(string)
+            except:
+                logger.debug("YAML Parsing failed!, Returning %s" % type(string))
+                data = string
+        return(data)
 
+    def __auth(self, username=None, password=None):
+        if not username: 
+            logger.debug("no username passed! prompting")
+            username = input("Username (default: %s): " % self.username)
+        if not password:
+            logger.debug("No password provided! Securely prompting...")
+            password = getpass.getpass("%s password: " % username)
+            
+        logger.info("Setting authentication details")
         self.s.auth = (username, password)
 
     def __set_headers(self, headers=None):
-        if not headers: headers = self.headers
+        if not headers:
+            logger.debug("No special headers provided, Using job default headers")
+            headers = self.headers
+        logger.info("Setting headers")
         self.s.headers.update(headers)
 
     def __set_certs(self, certs=None):
-        if not certs: certs = self.certs
+        if not certs:
+            certs = self.certs
+            logger.info("No special certificates provided, Using job default certificates")
+            
         if "ca_bundle" in conf["certs"].keys() and conf["certs"]["ca_bundle"]:
+            logger.info("Found ca bundle certificate")
             self.s.verify = conf["certs"]["ca_bundle"]
         else:
             if self.conf["verbose"]: print("No ca_bundle specified, skipping...")
@@ -99,11 +140,13 @@ class WarpRunner:
         certs = []
 
         if "client" in conf["certs"].keys() and conf["certs"]["client"]:
+            logger.info("Found client certificate")
             certs.append(conf["certs"]["client"])
         else:
             if self.conf["verbose"]: print("No client specified, skipping...")
         
         if "key" in conf["certs"].keys() and conf["certs"]["key"]:
+            logger.info("Found a keyfile")
             certs.append(conf["certs"]["key"])
         else:
             if self.conf["verbose"]: print("No key specified, skipping...")
@@ -112,61 +155,66 @@ class WarpRunner:
             c = tuple(certs)
             self.s.cert = c
         elif len(certs) == 1:
-            print(certs)
-            self.s.cert = certs[0]
+            c = certs[0]
+        
+        logger.debug("Setting certificates")
+        self.s.cert = c
         
     def __request(self, url, task, data):
+        
+        logger.info("Setting target URL")
         target_url = "/".join([url, self.__interpret(task["uri"], self.vars)])
 
         if "urlencode" in task.keys() and task["urlencode"] or self.urlencode:
+            logger.info("URL encoding preference detected, parsing data into url.")
             target_url = "?".join([target_url, urllib.parse.urlencode(json.loads(data))])
             data = None
 
         if self.verbose: print("  - URL: %s" % target_url)
 
         if task["action"]["req"] == "get":
+            logger.info("Running GET request")
             t = self.s.get(target_url, data = data)
         elif task["action"]["req"] == "post":
+            logger.info("Running POST request")
             t = self.s.post(target_url, data = data)
         elif task["action"]["req"] == "delete":
+            logger.info("Running DELETE request")
             t = self.s.delete(target_url, data = data)
         elif task["action"]["req"] == "put":
+            logger.info("Running PUT request")
             t = self.s.put(target_url, data = data)
         
         if str(t.status_code) in ["200"]:
             if self.verbose: print("  - Status: SUCCESS")
         else:
+            logger.critical("Request Status Code: %s" % t.status_code)
             if self.verbose: print("  - Status: ERROR")
 
         return(t)
 
     def __readFileIntoVar(self, var_file):
+        logger.info("Reading vars file into job vars")
         if "to_name" in var_file.keys() and var_file["to_name"] is not None:
             varname = self.__interpret(var_file["to_name"])
         else:
+            logger.critical("Variables must have names")
             print("vars must have names")
             sys.exit(-1)
 
         if "var_file" in var_file.keys() and os.path.isfile(var_file["var_file"]):
+            logging.info("%s exists" % var_file["var_file"])
             if self.verbose:
+                logging.debug("Reading %s" % var_file["var_file"])
                 print("  - Reading vars from: %s" % var_file["var_file"])
             data = yaml.safe_load(open(var_file["var_file"], "r").read())
         else:
+            logging.error("%s doesn't exist :(" % var_file["var_file"])
             print("not a valid file...")
             sys.exit(-1)
     
         self.vars[varname] = data
-
-    def __objectify(self, string):
-        try:
-          data = json.loads(string)
-        except:
-            try:
-                data = yaml.safe_load(string)
-            except:
-                data = string
-        return(data)
-
+ 
     def __output(self, task, output=None):
         # Objectify all the things (try to interpret it as a dict otherwise return the string we sent)
         output = self.__objectify(output)
@@ -212,7 +260,7 @@ class WarpRunner:
             else:
                 fh = input("Storage file: ")
             f = open(fh, "w+")
-            f.write(data) 
+            f.write(json.dumps(data))
 
         elif task["output"]["write_to"] == "screen":
             self.pp.pprint(data)
@@ -220,7 +268,8 @@ class WarpRunner:
     def run(self):
         # Evaluate potential iteration before the task actually runs
         for task in self.conf["tasks"]:
-            print("### %s ###" % task["name"])
+            if self.verbose: print("### %s ###" % task["name"])
+            else: print("running: %s" % task["name"])
             if "loop" in task.keys() and task["loop"] is not None:
                 if "items" in task["loop"].keys() and task["loop"]["items"] is not None:
                     taskitems = json.loads(self.__interpret(task["loop"]["items"]).replace("'", "\""))
@@ -282,8 +331,8 @@ def main(args):
     job = WarpRunner(conf)
     job.run()
 
-if __name__ == "__main__":
+if __name__ == "__main__":   
     parser = argparse.ArgumentParser(description="Warwalrux Awesome Rest Parser")
-    parser.add_argument("-j", "--jobfile", default=None, help="YAML Jobfile")
+    parser.add_argument("-j", "--jobfile", required=True, default=None, help="YAML Jobfile")
     args = parser.parse_args()
     main(args)

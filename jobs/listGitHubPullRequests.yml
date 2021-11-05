@@ -20,6 +20,16 @@ tasks:
       items: "{{ repos }}"
       iter_name: "repo"
     output:
-      write_to: "screen"
+      write_to: "var"
       content: "content"
+      name: "{{ repo }}"
+  - name: "Print PRs"
+    uri: "none"
+    action:
+      dump: "{{ self.vars.{{ repo }} }}"
+    loop:
+      items: "{{ repos }}"
+      iter_name: "repo"
+    output:
+      write_to: "screen"
 verbose: True

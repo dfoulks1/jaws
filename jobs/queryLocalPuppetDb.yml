@@ -10,9 +10,9 @@ tasks:
       req: "get"
     data:
       query:
-        - "="
-        - "node_state"
-        - "active"
+        - =
+        - node_state
+        - active
     output:
       write_to: "screen"
       name: "puppet"
