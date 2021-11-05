@@ -20,7 +20,15 @@ tasks:
     action:
       req: "post"
     output: 
-      write_to: "file"
+      write_to: "var"
+      name: "issues"
+      content: "content"
+  - name: "Dump content to file with template string"
+    uri: "none"
+    action:
+      dump: "{{ issues }}"
+    output:
+      write_to: "screen"
       content: "template"
-      template_str: "{% for issue in issues %} {{ issue.key }}\n {% endfor %}"
+      template_str: "{% for issue in issues %}{{ issue.key }} {% endfor %}"
 verbose: False

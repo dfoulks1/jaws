@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import argparse
 import getpass
 import jinja2
@@ -115,7 +116,7 @@ class WarpRunner:
             self.s.cert = certs[0]
         
     def __request(self, url, task, data):
-        target_url = "/".join([url, self.__interpret(task["uri"])])
+        target_url = "/".join([url, self.__interpret(task["uri"], self.vars)])
 
         if "urlencode" in task.keys() and task["urlencode"] or self.urlencode:
             target_url = "?".join([target_url, urllib.parse.urlencode(json.loads(data))])
@@ -156,25 +157,52 @@ class WarpRunner:
     
         self.vars[varname] = data
 
+    def __objectify(self, string):
+        try:
+          data = json.loads(string)
+        except:
+            try:
+                data = yaml.safe_load(string)
+            except:
+                data = string
+        return(data)
+
     def __output(self, task, output=None):
+        # Objectify all the things (try to interpret it as a dict otherwise return the string we sent)
+        output = self.__objectify(output)
+        
+        # Wrangle content settings and mangle the output to fit.
+        if "content" not in task["output"].keys() or task["output"]["content"] == "raw":
+            data = output
+        elif task["output"]["content"] in self.show_types:
+            if "req" in task["action"]:
+                data = self.__objectify((getattr(output, task["output"]["content"])))
+            else:
+                print("content: %s can only be used with request actions"%(task["output"]["content"]))
+        elif task["output"]["content"] == "template":
+            if "template_str" in task["output"].keys() and task["output"]["template_str"]:
+                if "req" in task["action"]:
+                    data = self.__interpret(task["output"]["template_str"], output.content.decode('utf8'))
+                elif isinstance(output, dict):
+                    data = self.__interpret(task["output"]["template_str"], output)
+                else:
+                    print("vars object must be used for templating...")
+            elif "template_file" in task["output"].keys() and task["output"]["template_file"]:
+                if "req" in task["action"]:
+                    data = self.__interpret(open(task["output"]["template_file"], "r").read(), output.content.decode('utf8'))
+                elif isinstance(output, dict):
+                    data = self.__interpret(open(task["output"]["template_file"], "r").read(), output)
+                else:
+                    print("vars object must be used for templating...")
+            else: print("No template provided..")
+
+        # Do the output redirection to the users preferred destination
         if task["output"]["write_to"] == "var":
             if "name" in task["output"].keys() and task["output"]["name"] is not None:
                 vname = task["output"]["name"]
             else:
                 print("Variables must have names!")
                 sys.exit(-1)
-                
-            if "content" not in task["output"].keys() or task["output"]["content"] == "raw":
-                data = output
-            elif task["output"]["content"] in self.show_types:
-                data = json.loads(getattr(output, task["output"]["content"]))
-            elif task["output"]["content"] == "template":
-                if "template_str" in task["output"].keys() and task["output"]["template_str"]:
-                    data = self.__interpret(task["output"]["template_str"], json.loads(output.content.decode('utf8')))
-                elif "template_file" in task["output"].keys() and task["output"]["template_file"]:
-                    data = self.__interpret(open(task["output"]["template_file"], "r").read(), json.loads(output.content.decode('utf8')))
-                else: print("No template provided..")
-
             self.vars[vname] = data
 
         elif task["output"]["write_to"] == "file":
@@ -184,32 +212,9 @@ class WarpRunner:
             else:
                 fh = input("Storage file: ")
             f = open(fh, "w+")
-           
-            if "content" not in task["output"].keys() or task["output"]["content"] == "raw":
-                data = output
-            elif task["output"]["content"] in self.show_types:
-                data = json.dumps(json.loads(getattr(output, task["output"]["content"])))
-            elif task["output"]["content"] == "template":
-                if "template_str" in task["output"].keys() and task["output"]["template_str"]:
-                    data = self.__interpret(task["output"]["template_str"], json.loads(output.content.decode('utf8')))
-                elif "template_file" in task["output"].keys() and task["output"]["template_file"]:
-                    data = self.__interpret(open(task["output"]["template_file"], "r").read(), json.loads(output.content.decode('utf8')))
-                else: print("No template provided..")
-
             f.write(data) 
 
         elif task["output"]["write_to"] == "screen":
-            if "content" not in task["output"].keys() or task["output"]["content"] == "raw":
-                data = json.loads(output)
-            elif task["output"]["content"] in self.show_types:
-                data = json.loads(getattr(output, task["output"]["content"]))
-            elif task["output"]["content"] == "template":
-                if "template_str" in task["output"].keys() and task["output"]["template_str"]:
-                    data = self.__interpret(task["output"]["template_str"], json.loads(output.content.decode('utf8')))
-                elif "template_file" in task["output"].keys() and task["output"]["template_file"]:
-                    data = self.__interpret(open(task["output"]["template_file"], "r").read(), json.loads(output.content.decode('utf8')))
-                else: print("No template provided..")
-
             self.pp.pprint(data)
 
     def run(self):

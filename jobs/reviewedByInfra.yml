@@ -26,5 +26,7 @@ tasks:
   - name: "Print Tickets"
     action:
       dump: "{{ issues }}"
+    output:
+      write_to: "screen"
 
 verbose: False

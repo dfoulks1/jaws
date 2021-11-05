@@ -49,7 +49,7 @@ tasks:
     urlencode: True
     uri: "content/{{ target_page.results[0].id }}"
     data:
-      expand: "body.storage,version"
+      expand: "body.storage,version,space"
     action:
       req: "get"
     output:
@@ -88,13 +88,17 @@ tasks:
     stub_override: "https://cwiki.apache.org/confluence/rest/api"
     uri: "content/{{ page.id }}"
     data:
-      version: 
-        number: "{{ page.version.number + 1 }}"
+      space:
+        key: "{{ page.space.key }}"
       title: "{{ page.title }}"
       type: "{{ page.type }}"
+      id: "{{ page.id }}"
       body:
         storage:
-          value: "{{ page_body }}"
+          value: "{{ page.body.storage.value }}"
+          representation: "storage"
+      version: 
+        number: "{{ page.version.number + 1 }}"
     action:
       req: "put"
     output:

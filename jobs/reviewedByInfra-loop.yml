@@ -30,7 +30,7 @@ tasks:
       items: "{{ issues.issues }}"
       iter_name: "issue"
     output:
-      write_to: "var"
+      write_to: "screen"
       name: "output"
       content: "raw"
       
