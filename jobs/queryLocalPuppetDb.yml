@@ -1,0 +1,21 @@
+---
+stub: "http://localhost:8080"
+headers:
+  Content-Type: "application/json"
+tasks:
+  - name: "Query PuppetDB Database"
+    urlencode: True
+    uri: "pdb/query/v4/resources"
+    action:
+      req: "get"
+    data:
+      query:
+        - "="
+        - "node_state"
+        - "active"
+    output:
+      write_to: "screen"
+      name: "puppet"
+      content: "status_code"
+verbose: True
+
