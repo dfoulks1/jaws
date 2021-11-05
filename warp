@@ -30,8 +30,8 @@ if LOGGING:
 
 class WarpRunner:
     def __init__(self, conf):
-        logger.debug("Initializing new WARP object.")
-        logger.info("Conducting pre-flight checks")
+        if LOGGING: logger.debug("Initializing new WARP object.")
+        if LOGGING: logger.info("Conducting pre-flight checks")
         self.conf = conf
         self.pp = pprint.PrettyPrinter()
         self.s = requests.Session()
@@ -42,116 +42,116 @@ class WarpRunner:
         self.verbose = False
         # Set Job verbosity
         if "verbose" in self.conf.keys():
-            logger.debug("setting job output to: %s" % self.verbose)            
+            if LOGGING: logger.debug("setting job output to: %s" % self.verbose)            
             self.verbose = self.conf["verbose"]
        
         # Read in Job vars
         if "vars" in self.conf.keys() and self.conf["vars"] is not None:
-            logger.debug("Found Job vars.")
+            if LOGGING: logger.debug("Found Job vars.")
             self.vars = conf["vars"]
             if "read_vars" in self.vars.keys():
                 self.__readFileIntoVar(self.vars["read_vars"])
         else:
-            logger.debug("Initializing empty job vars object")
+            if LOGGING: logger.debug("Initializing empty job vars object")
             self.vars = {}
             
         self.urlencode = False
         # set urlencoding as false by default
         if "urlencode" in self.conf.keys() and self.conf["urlencode"]:
             self.urlencode = self.__interpret(self.conf["urlencode"])
-            logger.debug("Payload format preference set to \"urlencode\"")
+            if LOGGING: logger.debug("Payload format preference set to \"urlencode\"")
         # N.B. this and everything below it relies on __interpret so put it below the vars...
         else:
-            logger.debug("Payload format preference set to: \"JSON\"")
+            if LOGGING: logger.debug("Payload format preference set to: \"JSON\"")
             
         # Set the Job URL 
         if "stub" in self.conf.keys() and self.conf["stub"] is not None:
             self.url = self.__interpret(self.conf["stub"])
-            logger.debug("Setting Job Default URL stub to: %s" % self.url)
+            if LOGGING: logger.debug("Setting Job Default URL stub to: %s" % self.url)
 
         # Read in Job Headers
         if "headers" in conf.keys() and conf["headers"] is not None:
-            logger.debug("Job default headers found!")
+            if LOGGING: logger.debug("Job default headers found!")
             self.headers = json.loads(self.__interpret(json.dumps(conf["headers"]), self.vars))
             self.__set_headers(self.headers)
 
         # Authenticate if specified
         if "auth" in conf.keys():
             if "username" in conf["auth"].keys() and conf["auth"]["username"] is not None:
-                logger.info("Job default username found.")
+                if LOGGING: logger.info("Job default username found.")
                 self.username = self.__interpret(conf["auth"]["username"])
             else: self.username = input("Username: ")
 
             if "password" in conf["auth"].keys() and conf["auth"]["password"] is not None:
-                logger.info("Job default password found.")
+                if LOGGING: logger.info("Job default password found.")
                 self.password = self.__interpret(conf["auth"]["password"])
             else:
-                logger.info("Job default password not found, securely prompting...")
+                if LOGGING: logger.info("Job default password not found, securely prompting...")
                 self.password = getpass.getpass("%s password: "% self.username)
             self.__auth(self.username, self.password)
 
         # SSL Friendly certs settings
         if "certs" in conf.keys() and conf["certs"] is not None:
-            logger.debug("Job default certificate definitions found!")
+            if LOGGING: logger.debug("Job default certificate definitions found!")
             self.certs = conf["certs"]
             self.__set_certs(self.certs)
 
     def __interpret(self, string, args=None):
-        logger.debug("Interpreting %s" % type(string))
+        if LOGGING: logger.debug("Interpreting %s" % type(string))
         if not args:
-            logger.debug("No vars passed, using job vars")
+            if LOGGING: logger.debug("No vars passed, using job vars")
             args = self.vars
         try:
-            logger.debug("Rendering output from string")
+            if LOGGING: logger.debug("Rendering output from string")
             template = jinja2.Environment(loader=jinja2.BaseLoader).from_string(string)
             output = template.render(**args)
-            logger.debug("Returning rendered string")
+            if LOGGING: logger.debug("Returning rendered string")
         except TypeError:
-            logger.info("Not a valid template... returning original input")
+            if LOGGING: logger.info("Not a valid template... returning original input")
             output = string
 
         return output
 
     def __objectify(self, string):
-        logger.debug("Received %s" % type(string))
+        if LOGGING: logger.debug("Received %s" % type(string))
         try:
-            logger.debug("Trying JSON...")
+            if LOGGING: logger.debug("Trying JSON...")
             data = json.loads(string)
         except:
-            logger.debug("JSON Parsing failed!")
+            if LOGGING: logger.debug("JSON Parsing failed!")
             try:
-                logger.debug("Trying YAML...")
+                if LOGGING: logger.debug("Trying YAML...")
                 data = yaml.safe_load(string)
             except:
-                logger.debug("YAML Parsing failed!, Returning %s" % type(string))
+                if LOGGING: logger.debug("YAML Parsing failed!, Returning %s" % type(string))
                 data = string
         return(data)
 
     def __auth(self, username=None, password=None):
         if not username: 
-            logger.debug("no username passed! prompting")
+            if LOGGING: logger.debug("no username passed! prompting")
             username = input("Username (default: %s): " % self.username)
         if not password:
-            logger.debug("No password provided! Securely prompting...")
+            if LOGGING: logger.debug("No password provided! Securely prompting...")
             password = getpass.getpass("%s password: " % username)
             
-        logger.info("Setting authentication details")
+        if LOGGING: logger.info("Setting authentication details")
         self.s.auth = (username, password)
 
     def __set_headers(self, headers=None):
         if not headers:
-            logger.debug("No special headers provided, Using job default headers")
+            if LOGGING: logger.debug("No special headers provided, Using job default headers")
             headers = self.headers
-        logger.info("Setting headers")
+        if LOGGING: logger.info("Setting headers")
         self.s.headers.update(headers)
 
     def __set_certs(self, certs=None):
         if not certs:
             certs = self.certs
-            logger.info("No special certificates provided, Using job default certificates")
+            if LOGGING: logger.info("No special certificates provided, Using job default certificates")
             
         if "ca_bundle" in conf["certs"].keys() and conf["certs"]["ca_bundle"]:
-            logger.info("Found ca bundle certificate")
+            if LOGGING: logger.info("Found ca bundle certificate")
             self.s.verify = conf["certs"]["ca_bundle"]
         else:
             if self.conf["verbose"]: print("No ca_bundle specified, skipping...")
@@ -159,13 +159,13 @@ class WarpRunner:
         certs = []
 
         if "client" in conf["certs"].keys() and conf["certs"]["client"]:
-            logger.info("Found client certificate")
+            if LOGGING: logger.info("Found client certificate")
             certs.append(conf["certs"]["client"])
         else:
             if self.conf["verbose"]: print("No client specified, skipping...")
         
         if "key" in conf["certs"].keys() and conf["certs"]["key"]:
-            logger.info("Found a keyfile")
+            if LOGGING: logger.info("Found a keyfile")
             certs.append(conf["certs"]["key"])
         else:
             if self.conf["verbose"]: print("No key specified, skipping...")
@@ -176,82 +176,82 @@ class WarpRunner:
         elif len(certs) == 1:
             c = certs[0]
         
-        logger.debug("Setting certificates")
+        if LOGGING: logger.debug("Setting certificates")
         self.s.cert = c
         
     def __request(self, url, task, data):
-        logger.info("Setting target URL")
+        if LOGGING: logger.info("Setting target URL")
         target_url = "/".join([url, self.__interpret(task["uri"], self.vars)])
 
         if "urlencode" in task.keys() and task["urlencode"] or self.urlencode:
-            logger.info("URL encoding preference detected, parsing data into url.")
+            if LOGGING: logger.info("URL encoding preference detected, parsing data into url.")
             target_url = "?".join([target_url, urllib.parse.urlencode(json.loads(data))])
             data = None
 
         if self.verbose: print("  - URL: %s" % target_url)
 
         if task["action"]["req"] == "get":
-            logger.info("Running GET request")
+            if LOGGING: logger.info("Running GET request")
             t = self.s.get(target_url, data = data)
         elif task["action"]["req"] == "post":
-            logger.info("Running POST request")
+            if LOGGING: logger.info("Running POST request")
             t = self.s.post(target_url, data = data)
         elif task["action"]["req"] == "delete":
-            logger.info("Running DELETE request")
+            if LOGGING: logger.info("Running DELETE request")
             t = self.s.delete(target_url, data = data)
         elif task["action"]["req"] == "put":
-            logger.info("Running PUT request")
+            if LOGGING: logger.info("Running PUT request")
             t = self.s.put(target_url, data = data)
         
         if str(t.status_code) in ["200"]:
             if self.verbose: print("  - Status: SUCCESS")
         else:
-            logger.critical("Request Status Code: %s" % t.status_code, exc_info=True)
+            if LOGGING: logger.critical("Request Status Code: %s" % t.status_code, exc_info=True)
             if self.verbose: print("  - Status: ERROR")
 
         return(t)
 
     def __readFileIntoVar(self, var_file):
-        logger.info("Reading vars file into job vars")
+        if LOGGING: logger.info("Reading vars file into job vars")
         if "to_name" in var_file.keys() and var_file["to_name"] is not None:
             varname = self.__interpret(var_file["to_name"])
         else:
-            logger.critical("Variables must have names", exc_info=True)
+            if LOGGING: logger.critical("Variables must have names", exc_info=True)
             print("vars must have names")
             sys.exit(-1)
 
         if "var_file" in var_file.keys() and os.path.isfile(var_file["var_file"]):
-            logger.info("%s exists" % var_file["var_file"])
+            if LOGGING: logger.info("%s exists" % var_file["var_file"])
             if self.verbose:
-                logger.debug("Reading %s" % var_file["var_file"])
+                if LOGGING: logger.debug("Reading %s" % var_file["var_file"])
                 print("  - Reading vars from: %s" % var_file["var_file"])
             data = yaml.safe_load(open(var_file["var_file"], "r").read())
         else:
-            logger.error("%s doesn't exist :(" % var_file["var_file"])
+            if LOGGING: logger.error("%s doesn't exist :(" % var_file["var_file"])
             print("not a valid file...")
             sys.exit(-1)
     
         self.vars[varname] = data
  
     def __output(self, task, output=None):
-        logger.debug("Received %s, objectifying..." % type(output))
+        if LOGGING: logger.debug("Received %s, objectifying..." % type(output))
         
         # Objectify all the things (try to interpret it as a dict otherwise return the string we sent)
         output = self.__objectify(output)
         
         # Wrangle content settings and mangle the output to fit.
         if "content" not in task["output"].keys() or task["output"]["content"] == "raw":
-            logger.info("Setting output data to the raw object")
+            if LOGGING: logger.info("Setting output data to the raw object")
             data = output
         elif task["output"]["content"] in self.show_types:
             if "req" in task["action"]:
-                logger.info("Setting output data to requests.%s" % task["output"]["content"])
+                if LOGGING: logger.info("Setting output data to requests.%s" % task["output"]["content"])
                 data = self.__objectify((getattr(output, task["output"]["content"])))
             else:
-                logger.error("Invalid use of 'content' keyword")
+                if LOGGING: logger.error("Invalid use of 'content' keyword")
                 print("content: %s can only be used with request actions"%(task["output"]["content"]))
         elif task["output"]["content"] == "template":
-            logger.info("Setting output data to templated string")
+            if LOGGING: logger.info("Setting output data to templated string")
             if "template_str" in task["output"].keys() and task["output"]["template_str"]:
                 if "req" in task["action"]:
                     data = self.__interpret(task["output"]["template_str"], output.content.decode('utf8'))
@@ -267,7 +267,7 @@ class WarpRunner:
                 else:
                     print("vars object must be used for templating...")
             else:
-                logger.error("No template provided.") 
+                if LOGGING: logger.error("No template provided.") 
                 print("No template provided..")
 
         # Do the output redirection to the users preferred destination
@@ -275,113 +275,113 @@ class WarpRunner:
             if "name" in task["output"].keys() and task["output"]["name"] is not None:
                 vname = task["output"]["name"]
             else:
-                logger.critical("Variables must have names!")
+                if LOGGING: logger.critical("Variables must have names!")
                 print("Variables must have names!")
                 sys.exit(-1)
                 
-            logger.info("Setting var: %s" % vname)
+            if LOGGING: logger.info("Setting var: %s" % vname)
             self.vars[vname] = data
 
         elif task["output"]["write_to"] == "file":
             # Read in file name
             if "name" in task["output"].keys() and task["output"]["name"] is not None:
                 fh = task["output"]["name"]
-                logger.info("Setting filehandle to: %s" % fh)
+                if LOGGING: logger.info("Setting filehandle to: %s" % fh)
             else:
-                logger.info("No filehandle specified, prompting for filename...")
+                if LOGGING: logger.info("No filehandle specified, prompting for filename...")
                 fh = input("Storage file: ")
-            logger.debug("Opening %s for writing" % fh)
+            if LOGGING: logger.debug("Opening %s for writing" % fh)
             f = open(fh, "w+")
             
-            logger.debug("Writing json dump to file.")
+            if LOGGING: logger.debug("Writing json dump to file.")
             f.write(json.dumps(data))
 
         elif task["output"]["write_to"] == "screen":
-            logger.debug("Pretty printing to screen")
+            if LOGGING: logger.debug("Pretty printing to screen")
             self.pp.pprint(data)
 
     def __run_task(self, task):
             # Read in payload data
             if "data" in task.keys() and task["data"] is not None:
                 data = self.__interpret(json.dumps(task["data"]))
-                logger.debug("Found payload data!")
+                if LOGGING: logger.debug("Found payload data!")
             else:
-                logger.debug("Payload Data set to None")
+                if LOGGING: logger.debug("Payload Data set to None")
                 data = None
             if self.verbose: print("  - Payload: %s" % data)
 
             # Read in stub_override
             if "stub_override" in task.keys() and task["stub_override"]:
-                logger.info("task stub override found!")
+                if LOGGING: logger.info("task stub override found!")
                 url = self.__interpret(task["stub_override"])
             else:
-                logger.info("using default URL")
+                if LOGGING: logger.info("using default URL")
                 url = self.url
 
             # Evaluate Action Statement
             if "action" not in task.keys() or not isinstance(task["action"], dict):
-                logger.critical("No action specified...")
+                if LOGGING: logger.critical("No action specified...")
                 print("Invalid Action specified, bailing out!")
                 sys.exit(3)
                 
             # Request
             if "req" in task["action"].keys():
-                logger.info("Request task detected.")
+                if LOGGING: logger.info("Request task detected.")
                 t = self.__request(url, task, data)
             
             # Dump
             elif "dump" in task["action"].keys():
-                logger.info("Dump task detected.")
+                if LOGGING: logger.info("Dump task detected.")
                 t = self.__interpret(task["action"]["dump"])
 
             # Read vars from vars file
             elif "read_vars" in task["action"].keys() and task["action"]["read_vars"] is not None:
-                logger.info("Read var_file task detected.")
+                if LOGGING: logger.info("Read var_file task detected.")
                 self.__readFileIntoVar(task["action"]["read_vars"])
 
             if "output" in task.keys():
-                logger.info("Task output directive detected,")
+                if LOGGING: logger.info("Task output directive detected,")
                 self.__output(task, t)
                 
     def run(self):
         # Evaluate potential iteration before the task actually runs
-        logger.info("beginning job tasks...")
+        if LOGGING: logger.info("beginning job tasks...")
         for task in self.conf["tasks"]:
             if self.verbose: print("### %s ###" % task["name"])
             else: print("running: %s" % task["name"])
             if "loop" in task.keys() and task["loop"] is not None:
-                logger.info("Task iteration detected")
+                if LOGGING: logger.info("Task iteration detected")
                 if "items" in task["loop"].keys() and task["loop"]["items"] is not None:
                     taskitems = json.loads(self.__interpret(task["loop"]["items"]).replace("'", "\""))
-                    logger.debug("task items received.")
+                    if LOGGING: logger.debug("task items received.")
                 else:
-                    logger.critical("No task items received!")
+                    if LOGGING: logger.critical("No task items received!")
                     print("No loop items provided... Stopping.")
                     sys.exit(2)
                 if "iter_name" in task["loop"].keys() and task["loop"]["iter_name"] is not None:
-                    logger.debug("task iterator name received.")
+                    if LOGGING: logger.debug("task iterator name received.")
                     itemname = task["loop"]["iter_name"]
                 else:
-                    logger.critical("No task iterator name set!")
+                    if LOGGING: logger.critical("No task iterator name set!")
                     print("No Iterator provided... Stopping.")
                     sys.exit(2)
 
-                logger.info("Iterating through items")
+                if LOGGING: logger.info("Iterating through items")
                 for taskitem in taskitems:
-                    logger.debug("Creating temporary vars")
+                    if LOGGING: logger.debug("Creating temporary vars")
                     t_vars = {}
-                    logger.debug("setting current item to: %s"%itemname)
+                    if LOGGING: logger.debug("setting current item to: %s"%itemname)
                     t_vars[itemname] = taskitem
-                    logger.debug("Creating a loopless copy of the current task")
+                    if LOGGING: logger.debug("Creating a loopless copy of the current task")
                     t = task.copy()
                     t.pop("loop")
-                    logger.debug("Merging temporary_vars into job vars")
+                    if LOGGING: logger.debug("Merging temporary_vars into job vars")
                     self.vars = {**self.vars, **t_vars}
-                    logger.debug("Running the currently iterated copy of the task")
+                    if LOGGING: logger.debug("Running the currently iterated copy of the task")
                     self.__run_task(self.__interpret(t))
             else:
                 # No iteration found, JFDI.
-                logger.debug("No iteration detected, running .")
+                if LOGGING: logger.debug("No iteration detected, running .")
                 self.__run_task(task)
 
 
