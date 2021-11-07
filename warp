@@ -14,7 +14,7 @@ import yaml
 
 # Log Settings
 LOGGING = True
-LOGFILE = ""
+LOGFILE = "warp.log"
 LOGLEVEL = "DEBUG"
 LOGFORMAT = "[ %(filename)s.%(funcName)s (L%(lineno)s) ] %(levelname)s: %(message)s"
 
@@ -338,29 +338,26 @@ class WarpRunner:
             if "req" in task["action"].keys():
                 if LOGGING: logger.info("Request task detected.")
                 t = self.__request(task["action"])
-            
+                return(t)
+                
             # Dump
             elif "dump" in task["action"].keys():
                 if LOGGING: logger.info("Dump task detected.")
                 t = self.__interpret(task["action"]["dump"])
-    
+                return(t)
+                
             # Read vars from vars file
             elif "read_vars" in task["action"].keys() and task["action"]["read_vars"] is not None:
                 if LOGGING: logger.info("Read var_file task detected.")
                 self.__readFileIntoVar(task["action"]["read_vars"])
 
-        if "output" in task.keys():
-            if LOGGING: logger.info("Task output directive detected,")
-            self.__output(task, t)
-            
     def run(self):
         # Evaluate potential iteration before the task actually runs
         if LOGGING: logger.info("beginning job tasks...")
-        for task in self.conf["tasks"]:
+        for idx, task in enumerate(self.conf["tasks"]):
             # Print something friendly
             if self.verbose: print("### %s ###" % task["name"])
             else: print("running: %s" % task["name"])
-            
             if "loop" in task.keys() and task["loop"] is not None:
                 if LOGGING: logger.info("Task iteration detected")
                 if "items" in task["loop"].keys() and task["loop"]["items"] is not None:
@@ -378,8 +375,13 @@ class WarpRunner:
                     print("No Iterator provided... Stopping.")
                     sys.exit(2)
                     
+                if "loop_data" not in self.vars.keys():
+                    if LOGGING: logger.debug("creating a loop_data vars object")
+                    self.vars["loop_data"] = {}
+                
+                self.vars["loop_data"][idx] = {}
                 if LOGGING: logger.info("Iterating through items")
-                for taskitem in taskitems:
+                for index, taskitem in enumerate(taskitems):
                     if LOGGING: logger.debug("Creating temporary vars")
                     t_vars = {}
                     if LOGGING: logger.debug("setting current item to: %s"%itemname)
@@ -390,12 +392,24 @@ class WarpRunner:
                     if LOGGING: logger.debug("Merging temporary_vars into job vars")
                     self.vars = {**self.vars, **t_vars}
                     if LOGGING: logger.debug("Running the currently iterated copy of the task")
-                    self.__run_task(self.__interpret(t))
+                    t_output = self.__run_task(self.__interpret(t))
+                    if t_output:
+                        if LOGGING: logger.info("values were returned, storing them in loop_data")
+                        self.vars["loop_data"][index] = t_output
+                    
+                    if LOGGING: logger.debug("Checking the task for output directive")
+                    if "output" in task.keys():
+                        if LOGGING: logger.info("Task output directive detected,")
+                        self.__output(task, t_output)
+            
             else:
                 # No iteration found, JFDI.
                 if LOGGING: logger.debug("No iteration detected, running .")
-                self.__run_task(task)
-
+                t_output = self.__run_task(task)
+                
+                if "output" in task.keys():
+                    if LOGGING: logger.info("Task output directive detected,")
+                    self.__output(task, t_output)
 
 def main(args):
     conf = yaml.safe_load(open(args.jobfile, "r"))
@@ -407,3 +421,4 @@ if __name__ == "__main__":
     parser.add_argument("-j", "--jobfile", required=True, default=None, help="YAML Jobfile")
     args = parser.parse_args()
     main(args)
+    

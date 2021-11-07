@@ -13,26 +13,24 @@ tasks:
       req: "get"
       uri: "issue/createmeta"
   - name: "Query Tickets"
-    
     action: 
       req: "post"
       uri: "search"
-    data:
-      jql: "project = INFRA AND labels = ReviewedByInfra"
-      fields: [ "key" ]
+      data:
+        jql: "project = INFRA AND labels = ReviewedByInfra"
+        fields: [ "key" ]
     output: 
       write_to: "var"
       content: "content"
       name: "issues"
   - name: "Print Tickets"
     action: 
-      dump: "{{ issue.key }}\n"
+      dump: "{{ issue.key }}"
     loop:
       items: "{{ issues.issues }}"
       iter_name: "issue"
     output:
       write_to: "screen"
-      name: "output"
-      content: "raw"
+      
       
 verbose: False
