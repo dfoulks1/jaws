@@ -13,8 +13,8 @@ headers:
   Authorization: "token {{ ghtoken }}"
 tasks:
   - name: "Fetch PRs"
-    uri: "repos/{{ org }}/{{ repo }}/pulls"
     action:
+      uri: "repos/{{ org }}/{{ repo }}/pulls"
       req: "get"
     loop:
       items: "{{ repos }}"

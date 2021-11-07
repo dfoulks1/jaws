@@ -13,7 +13,7 @@ import urllib
 import yaml
 
 # Log Settings
-LOGGING = False
+LOGGING = True
 LOGFILE = ""
 LOGLEVEL = "DEBUG"
 LOGFORMAT = "[ %(filename)s.%(funcName)s (L%(lineno)s) ] %(levelname)s: %(message)s"
@@ -31,7 +31,8 @@ if LOGGING:
 class WarpRunner:
     def __init__(self, conf):
         if LOGGING: logger.debug("Initializing new WARP object.")
-        if LOGGING: logger.info("Conducting pre-flight checks")
+        if LOGGING: logger.info("Conducting pre-flight checks...")
+        
         self.conf = conf
         self.pp = pprint.PrettyPrinter()
         self.s = requests.Session()
@@ -48,7 +49,7 @@ class WarpRunner:
         # Read in Job vars
         if "vars" in self.conf.keys() and self.conf["vars"] is not None:
             if LOGGING: logger.debug("Found Job vars.")
-            self.vars = conf["vars"]
+            self.vars = self.conf["vars"]
             if "read_vars" in self.vars.keys():
                 self.__readFileIntoVar(self.vars["read_vars"])
         else:
@@ -179,27 +180,52 @@ class WarpRunner:
         if LOGGING: logger.debug("Setting certificates")
         self.s.cert = c
         
-    def __request(self, url, task, data):
+    def __request(self, action):
+        req_keys = ["req", "uri"]
+        
+        if LOGGING: logger.info("Parsing Request Action")
+        
+        # Fail if missing keys
+        for key in req_keys:
+            if key not in action.keys():
+                raise Exception("action must contain %s" % key)
+        
+        # Read in stub_override
         if LOGGING: logger.info("Setting target URL")
-        target_url = "/".join([url, self.__interpret(task["uri"], self.vars)])
+        if "stub_override" in action.keys() and action["stub_override"]:
+            if LOGGING: logger.info("task stub override found!")
+            url = self.__interpret(action["stub_override"])
+        else:
+            if LOGGING: logger.info("using default URL")
+            url = self.url
+        target_url = "/".join([url, self.__interpret(action["uri"], self.vars)])
 
-        if "urlencode" in task.keys() and task["urlencode"] or self.urlencode:
+        if "data" in action.keys() and action["data"] is not None:
+            if LOGGING: logger.info("Reading request payload")
+            data = self.__interpret(json.dumps(action["data"]))
+            if LOGGING: logger.debug("Found payload data!")
+        else:
+            if LOGGING: logger.debug("Payload Data set to None")
+            data = None
+        if self.verbose: print("  - Payload: %s" % data)
+        
+        if "urlencode" in action.keys() and action["urlencode"] or self.urlencode:
             if LOGGING: logger.info("URL encoding preference detected, parsing data into url.")
             target_url = "?".join([target_url, urllib.parse.urlencode(json.loads(data))])
             data = None
 
         if self.verbose: print("  - URL: %s" % target_url)
 
-        if task["action"]["req"] == "get":
+        if action["req"] == "get":
             if LOGGING: logger.info("Running GET request")
             t = self.s.get(target_url, data = data)
-        elif task["action"]["req"] == "post":
+        elif action["req"] == "post":
             if LOGGING: logger.info("Running POST request")
             t = self.s.post(target_url, data = data)
-        elif task["action"]["req"] == "delete":
+        elif action["req"] == "delete":
             if LOGGING: logger.info("Running DELETE request")
             t = self.s.delete(target_url, data = data)
-        elif task["action"]["req"] == "put":
+        elif action["req"] == "put":
             if LOGGING: logger.info("Running PUT request")
             t = self.s.put(target_url, data = data)
         
@@ -301,54 +327,40 @@ class WarpRunner:
             self.pp.pprint(data)
 
     def __run_task(self, task):
-            # Read in payload data
-            if "data" in task.keys() and task["data"] is not None:
-                data = self.__interpret(json.dumps(task["data"]))
-                if LOGGING: logger.debug("Found payload data!")
-            else:
-                if LOGGING: logger.debug("Payload Data set to None")
-                data = None
-            if self.verbose: print("  - Payload: %s" % data)
-
-            # Read in stub_override
-            if "stub_override" in task.keys() and task["stub_override"]:
-                if LOGGING: logger.info("task stub override found!")
-                url = self.__interpret(task["stub_override"])
-            else:
-                if LOGGING: logger.info("using default URL")
-                url = self.url
-
-            # Evaluate Action Statement
-            if "action" not in task.keys() or not isinstance(task["action"], dict):
-                if LOGGING: logger.critical("No action specified...")
-                print("Invalid Action specified, bailing out!")
-                sys.exit(3)
-                
+        # Evaluate Action Statement
+        if "action" not in task.keys() or not isinstance(task["action"], dict):
+            if LOGGING: logger.critical("No action specified...")
+            print("Invalid Action specified, bailing out!")
+            sys.exit(3)
+        
+        else:
             # Request
             if "req" in task["action"].keys():
                 if LOGGING: logger.info("Request task detected.")
-                t = self.__request(url, task, data)
+                t = self.__request(task["action"])
             
             # Dump
             elif "dump" in task["action"].keys():
                 if LOGGING: logger.info("Dump task detected.")
                 t = self.__interpret(task["action"]["dump"])
-
+    
             # Read vars from vars file
             elif "read_vars" in task["action"].keys() and task["action"]["read_vars"] is not None:
                 if LOGGING: logger.info("Read var_file task detected.")
                 self.__readFileIntoVar(task["action"]["read_vars"])
 
-            if "output" in task.keys():
-                if LOGGING: logger.info("Task output directive detected,")
-                self.__output(task, t)
-                
+        if "output" in task.keys():
+            if LOGGING: logger.info("Task output directive detected,")
+            self.__output(task, t)
+            
     def run(self):
         # Evaluate potential iteration before the task actually runs
         if LOGGING: logger.info("beginning job tasks...")
         for task in self.conf["tasks"]:
+            # Print something friendly
             if self.verbose: print("### %s ###" % task["name"])
             else: print("running: %s" % task["name"])
+            
             if "loop" in task.keys() and task["loop"] is not None:
                 if LOGGING: logger.info("Task iteration detected")
                 if "items" in task["loop"].keys() and task["loop"]["items"] is not None:
@@ -365,7 +377,7 @@ class WarpRunner:
                     if LOGGING: logger.critical("No task iterator name set!")
                     print("No Iterator provided... Stopping.")
                     sys.exit(2)
-
+                    
                 if LOGGING: logger.info("Iterating through items")
                 for taskitem in taskitems:
                     if LOGGING: logger.debug("Creating temporary vars")

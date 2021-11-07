@@ -9,22 +9,21 @@ auth:
   password: 
 tasks:
   - name: "Authenticate"
-    uri: "issue/createmeta"
     action:
       req: "get"
+      uri: "issue/createmeta"
   - name: "Query Tickets"
-    uri: "search"
-    data:
-      jql: "project = INFRA AND labels = ReviewedByInfra"
-      fields: [ "key" ]
     action:
       req: "post"
+      uri: "search"
+      data:
+        jql: "project = INFRA AND labels = ReviewedByInfra"
+        fields: [ "key" ]
     output: 
       write_to: "var"
       name: "issues"
       content: "content"
   - name: "Dump content to file with template string"
-    uri: "none"
     action:
       dump: "{{ issues }}"
     output:

@@ -8,9 +8,9 @@ auth:
   password: 
 tasks:
   - name: "Authenticate"
-    uri: "issue/createmeta"
     action:
       req: "get"
+      uri: "issue/createmeta"
     output:
       write_to: "screen"
 verbose: True

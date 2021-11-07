@@ -7,64 +7,59 @@ headers:
   Authorization: "basic"
 auth:
   username:
-  password: 
+  password:
 tasks:
   - name: "Find Page ID by Title"
-    uri: "content"
-    urlencode: True
-    data:
-      title: "{{ page_title }}"
-      spaceKey: "INFRA"
-      expand: "history"
     action:
       req: "get"
+        uri: "content"
+      urlencode: True
+      data:
+        title: "{{ page_title }}"
+        spaceKey: "INFRA"
+        expand: "history"
     output:
       write_to: "var"
       content: "content"
       name: "target_page"
-
   - name: "Get Confluence Page Data"
-    urlencode: True
-    uri: "content/{{ target_page.results[0].id }}"
-    data:
-      expand: "body.storage,version,space"
     action:
       req: "get"
+      urlencode: True
+      uri: "content/{{ target_page.results[0].id }}"
+      data:
+        expand: "body.storage,version,space"
     output:
       write_to: "var"
       content: "content"
       name: "page"
-
   - name: "Copy Page Body into something we can work with"
-    uri: "none"
     action:
       dump: "{{ page.body.storage.value }}"
     output:
       write_to: "var"
       name: "page_body"
-
   - name: "Update Confluence Page"
-    uri: "content/{{ page.id }}"
-    data:
-      space:
-        key: "{{ page.space.key }}"
-      title: "{{ page.title }}"
-      type: "{{ page.type }}"
-      id: "{{ page.id }}"
-      body:
-        storage:
-          value: "{{ page.body.storage.value }}"
-          representation: "storage"
-      version: 
-        number: "{{ page.version.number + 1 }}"
     action:
       req: "put"
+      uri: "content/{{ page.id }}"
+      data:
+        space:
+          key: "{{ page.space.key }}"
+        title: "{{ page.title }}"
+        type: "{{ page.type }}"
+        id: "{{ page.id }}"
+        body:
+          storage:
+            value: "{{ page.body.storage.value }}"
+            representation: "storage"
+        version: 
+          number: "{{ page.version.number + 1 }}"
     output:
       write_to: "screen"
       content: "content"
 
 #  - name: "Show page"
-#    uri: "none"
 #    action:
 #      dump: "{{ page.body.storage.value }}"
 #    output:
