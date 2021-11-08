@@ -14,7 +14,7 @@ import yaml
 
 # Log Settings
 LOGGING = True
-LOGFILE = "warp.log"
+LOGFILE = ""
 LOGLEVEL = "DEBUG"
 LOGFORMAT = "[ %(filename)s.%(funcName)s (L%(lineno)s) ] %(levelname)s: %(message)s"
 
