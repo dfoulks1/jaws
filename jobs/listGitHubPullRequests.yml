@@ -5,7 +5,7 @@ vars:
     - "infrastructure-p6"
     - "infrastructure-puppet"
   read_vars:
-    var_file: ""
+    var_file: "/home/dfoulks/.dfoulks1_ghtoken"
     to_name: "ghtoken"
   pulls: {}
 stub: "https://api.github.com"

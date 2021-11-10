@@ -39,6 +39,7 @@ tasks:
     output:
       write_to: "var"
       name: "page_body"
+      
   - name: "Update Confluence Page"
     action:
       req: "put"

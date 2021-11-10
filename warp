@@ -45,7 +45,7 @@ class WarpRunner:
         if "verbose" in self.conf.keys():
             if LOGGING: logger.debug("setting job output to: %s" % self.verbose)            
             self.verbose = self.conf["verbose"]
-       
+            
         # Read in Job vars
         if "vars" in self.conf.keys() and self.conf["vars"] is not None:
             if LOGGING: logger.debug("Found Job vars.")
@@ -358,10 +358,11 @@ class WarpRunner:
             # Print something friendly
             if self.verbose: print("### %s ###" % task["name"])
             else: print("running: %s" % task["name"])
+            
             if "loop" in task.keys() and task["loop"] is not None:
                 if LOGGING: logger.info("Task iteration detected")
                 if "items" in task["loop"].keys() and task["loop"]["items"] is not None:
-                    taskitems = json.loads(self.__interpret(task["loop"]["items"]).replace("'", "\""))
+                    taskitems = self.__objectify((self.__interpret(task["loop"]["items"]).replace("'", "\"")))
                     if LOGGING: logger.debug("task items received.")
                 else:
                     if LOGGING: logger.critical("No task items received!")
@@ -374,15 +375,11 @@ class WarpRunner:
                     if LOGGING: logger.critical("No task iterator name set!")
                     print("No Iterator provided... Stopping.")
                     sys.exit(2)
-                    
-                if "loop_data" not in self.vars.keys():
-                    if LOGGING: logger.debug("creating a loop_data vars object")
-                    self.vars["loop_data"] = {}
                 
-                self.vars["loop_data"][idx] = {}
+                task_vars = []
+                
                 if LOGGING: logger.info("Iterating through items")
                 for index, taskitem in enumerate(taskitems):
-                    if LOGGING: logger.debug("Creating temporary vars")
                     t_vars = {}
                     if LOGGING: logger.debug("setting current item to: %s"%itemname)
                     t_vars[itemname] = taskitem
@@ -410,6 +407,7 @@ class WarpRunner:
                 if "output" in task.keys():
                     if LOGGING: logger.info("Task output directive detected,")
                     self.__output(task, t_output)
+
 
 def main(args):
     conf = yaml.safe_load(open(args.jobfile, "r"))
